@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Order dashboard | Batter Up Bakery</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  body { background: #f6f1f6; font-size: 16px; }
+  .top { background: var(--plum-deep); color: #fff; }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; padding: .7rem 0; gap: 1rem; }
+  .top img { width: 48px; height: 48px; border-radius: 50%; }
+  .top b { font-family: var(--varsity); letter-spacing: .05em; }
+  .top form button { background: none; border: 1px solid rgba(255,255,255,.4); color: #fff; border-radius: 999px; padding: .4em 1em; cursor: pointer; font: inherit; }
+  .tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin: 1.4rem 0; }
+  .tabs button { border: 0; background: #fff; border-radius: 999px; padding: .6em 1.1em; font: 600 .95rem var(--sans); cursor: pointer; color: var(--ink); }
+  .tabs button[aria-selected="true"] { background: var(--plum); color: #fff; }
+  .tabs .count { background: var(--lime); color: var(--plum-deep); border-radius: 999px; padding: 0 .5em; margin-left: .3em; font-size: .8rem; }
+  .bar { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+  .bar select, .bar input { width: auto; padding: .5em .8em; }
+  .card { background: #fff; border-radius: 16px; padding: 1.1rem 1.2rem; margin-bottom: .8rem; border: 1px solid var(--line); }
+  .card.new { border-left: 5px solid var(--lime-deep); }
+  .card .head { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: start; }
+  .card h3 { margin: 0; font-size: 1.15rem; }
+  .card .code { font-family: var(--varsity); color: var(--plum); font-size: .85rem; letter-spacing: .05em; }
+  .card ul { margin: .6rem 0; padding-left: 1.1rem; }
+  .card .meta { color: var(--muted); font-size: .9rem; }
+  .card .actions { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .card .actions select { width: auto; padding: .45em .7em; }
+  .del { background: #fff; border: 1.5px solid #e6b3bb; color: #a01b2f; border-radius: 999px; padding: .45em .9em; font: 600 .85rem var(--sans); cursor: pointer; }
+  .del:hover { background: #fde8ea; }
+  .pill-status { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: .2em .6em; border-radius: 999px; background: var(--plum-soft); color: var(--plum); }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; }
+  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--line); font-size: .95rem; vertical-align: middle; }
+  th { background: var(--plum-soft); color: var(--plum-deep); font-size: .85rem; }
+  td input[type=text] { padding: .4em .6em; }
+  td input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--plum); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  .settings label { margin-top: .8rem; }
+  .ok { background: #e9f4d2; color: #3c5410; border-radius: 12px; padding: .6rem 1rem; font-weight: 600; }
+  .sheet h3 { margin-top: 1.4rem; }
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); background: #fff; border-radius: 16px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } .hide-sm { display: none; } }
+  @media print { .top, .tabs, .bar, .no-print { display: none !important; } body { background: #fff; } }
+</style>
+</head>
+<body>
+<div class="top"><div class="wrap">
+  <div style="display:flex;align-items:center;gap:.8rem"><img src="/img/logo.jpg" alt=""><b>Batter Up Orders</b></div>
+  <form method="post" action="/admin/logout"><button>Sign out</button></form>
+</div></div>
+
+<div class="wrap" style="padding-bottom:4rem">
+  <div class="tabs" role="tablist">
+    <button role="tab" data-tab="orders" aria-selected="true">Orders <span class="count" id="new-count" hidden></span></button>
+    <button role="tab" data-tab="sheet" aria-selected="false">Bake &amp; route sheet</button>
+    <button role="tab" data-tab="flavors" aria-selected="false">Flavors</button>
+    <button role="tab" data-tab="stops" aria-selected="false">Shops &amp; route</button>
+    <button role="tab" data-tab="settings" aria-selected="false">Prices &amp; settings</button>
+  </div>
+
+  <div class="bar" id="range-bar">
+    <label for="range" style="margin:0">Show</label>
+    <select id="range"></select>
+    <select id="status-filter">
+      <option value="open">Open orders</option>
+      <option value="new">New only</option>
+      <option value="all">All statuses</option>
+    </select>
+    <span class="muted" id="cycle-note"></span>
+  </div>
+
+  <section data-panel="orders" style="padding:0"><div id="orders"></div></section>
+  <section data-panel="sheet" style="padding:0" hidden><button class="btn small no-print" onclick="print()">Print</button><div class="sheet" id="sheet"></div></section>
+
+  <section data-panel="flavors" style="padding:0" hidden>
+    <div class="card no-print">
+      <h3>Add a flavor</h3>
+      <div class="bar" style="margin:.6rem 0 0">
+        <input id="nf-name" placeholder="Flavor name" style="flex:1;min-width:200px">
+        <label class="check" style="margin:0"><input type="checkbox" id="nf-gf"> GF</label>
+        <label class="check" style="margin:0"><input type="checkbox" id="nf-season"> Seasonal</label>
+        <button class="btn small" id="nf-add">Add flavor</button>
+      </div>
+    </div>
+    <p class="muted">Uncheck <b>On menu</b> to hide a flavor without deleting it. GF means it can be made gluten friendly as a whole cheesecake.</p>
+    <table><thead><tr><th>Flavor</th><th>GF</th><th>Seasonal</th><th>On menu</th><th></th></tr></thead><tbody id="flavor-rows"></tbody></table>
+  </section>
+
+  <section data-panel="stops" style="padding:0" hidden>
+    <div class="card no-print">
+      <h3>Add a shop / meet-up stop</h3>
+      <div class="bar" style="margin:.6rem 0 0">
+        <input id="ns-name" placeholder="Shop name" style="flex:1;min-width:180px">
+        <input id="ns-town" placeholder="Town" style="width:160px">
+        <select id="ns-day"><option>Tuesday</option><option>Wednesday</option></select>
+        <select id="ns-route"><option value="1">Route 1</option><option value="2">Route 2</option><option value="3">Route 3</option><option value="4">Route 4</option></select>
+        <button class="btn small" id="ns-add">Add shop</button>
+      </div>
+    </div>
+    <p class="muted">These show on the Find a Slice page and as meet-up spots on the order form. Uncheck <b>Showing</b> to hide one.</p>
+    <table><thead><tr><th>Shop</th><th>Town</th><th>Day</th><th class="hide-sm">Route</th><th>Showing</th><th></th></tr></thead><tbody id="stop-rows"></tbody></table>
+  </section>
+
+  <section data-panel="settings" style="padding:0" hidden>
+    <div class="grid2">
+      <div class="card settings">
+        <h3>Prices (tax included)</h3>
+        <label for="p-whole">Whole cheesecake ($)</label><input id="p-whole" inputmode="decimal">
+        <label for="p-gf">Gluten-friendly crust add-on ($)</label><input id="p-gf" inputmode="decimal">
+        <label for="p-m6">Mini 6-pack ($)</label><input id="p-m6" inputmode="decimal">
+        <label for="p-m105">Mini 10-pack, up to 5 flavors ($)</label><input id="p-m105" inputmode="decimal">
+        <label for="p-m1010">Mini 10-pack, up to 10 flavors ($)</label><input id="p-m1010" inputmode="decimal">
+      </div>
+      <div class="card settings">
+        <h3>Online ordering</h3>
+        <label class="check"><input type="checkbox" id="s-open"> Take orders on the website</label>
+        <p class="muted">Turn this off for vacations or busy weeks. The order button will tell people to message you on Facebook instead.</p>
+        <label for="s-ann">Banner message at the top of the site (optional)</label>
+        <input id="s-ann" maxlength="200" placeholder="Example: Holiday flavors are here! Order by Dec 13.">
+        <p class="muted">Leave blank to show this week's order cutoff.</p>
+      </div>
+    </div>
+    <div class="err" id="set-err" hidden></div><div class="ok" id="set-ok" hidden>Saved.</div>
+    <button class="btn" id="save-settings" style="margin-top:1rem">Save prices &amp; settings</button>
+  </section>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const money = (c) => '$' + (c / 100).toFixed(2);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const day = (iso) => iso ? new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' }) : '';
+  const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  async function api(path, opts = {}) {
+    const r = await fetch('/api/admin' + path, { ...opts, headers: { 'Content-Type': 'application/json' }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+    if (r.status === 401) { location.href = '/admin/login'; throw new Error('signed out'); }
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Something went wrong');
+    return data;
+  }
+
+  // Tabs
+  let tab = 'orders';
+  document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+    tab = b.dataset.tab;
+    document.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
+    $('range-bar').hidden = !(tab === 'orders' || tab === 'sheet');
+    if (tab === 'flavors') loadFlavors();
+    if (tab === 'stops') loadStops();
+    if (tab === 'settings') loadSettings();
+  }));
+
+  // ---------- orders ----------
+  let overview, orders = [];
+  async function loadOverview() {
+    overview = await api('/overview');
+    const c = overview.cycle;
+    const next = c.route.Tuesday.date;
+    const cur = addDays(next, -7);
+    $('range').innerHTML = `
+      <option value="${cur}|${addDays(cur, 4)}">This delivery week (${day(cur)} to ${day(addDays(cur, 4))})</option>
+      <option value="${next}|${addDays(next, 4)}" selected>Next delivery week (${day(next)} to ${day(addDays(next, 4))})</option>
+      <option value="${cur}|">This week and later</option>
+      <option value="|">All orders</option>`;
+    $('cycle-note').textContent = `Next week's orders close ${c.cutoff.label}.`;
+  }
+  async function loadOrders() {
+    const [from, to] = $('range').value.split('|');
+    const st = $('status-filter').value;
+    const data = await api(`/orders?from=${from}&to=${to}&status=${st === 'open' ? 'all' : st}`);
+    orders = st === 'open' ? data.orders.filter((o) => o.status !== 'done' && o.status !== 'cancelled') : data.orders;
+    renderOrders(); renderSheet();
+    const newN = data.orders.filter((o) => o.status === 'new').length;
+    $('new-count').textContent = newN; $('new-count').hidden = !newN;
+  }
+  function where(o) {
+    if (o.fulfillment === 'route') return `Route meet-up: <b>${esc(o.stop_label)}</b> · ${day(o.fulfill_date)}`;
+    if (o.fulfillment === 'pickup') return `BUB Shed pickup · <b>${day(o.fulfill_date)}</b>`;
+    return `Ship (UPS ${day(o.fulfill_date)}) to <b>${esc(o.ship_address)}</b> · <i>quote shipping</i>`;
+  }
+  function renderOrders() {
+    if (!orders.length) { $('orders').innerHTML = '<div class="empty-state"><h3>No orders here yet</h3><p>New website orders show up here and are emailed to you.</p></div>'; return; }
+    $('orders').innerHTML = orders.map((o) => `
+      <div class="card ${o.status === 'new' ? 'new' : ''}">
+        <div class="head">
+          <div>
+            <span class="code">${esc(o.code)}</span> <span class="pill-status">${esc(o.status)}</span>
+            <h3>${esc(o.name)}</h3>
+            <div class="meta"><a href="tel:${esc(o.phone)}">${esc(o.phone)}</a> · <a href="sms:${esc(o.phone)}">Text</a>${o.email ? ` · <a href="mailto:${esc(o.email)}">${esc(o.email)}</a>` : ''}</div>
+          </div>
+          <div style="text-align:right"><b style="font-size:1.25rem;color:var(--plum)">${money(o.total_cents)}</b><div class="meta">Placed ${esc(new Date(o.created_at.replace(' ', 'T') + 'Z').toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }))}</div></div>
+        </div>
+        <p style="margin:.6rem 0 0">${where(o)}</p>
+        <ul>${o.items.map((i) => `<li>${i.qty} × <b>${esc(i.label)}</b>: ${esc(i.detail)}</li>`).join('')}</ul>
+        ${o.notes ? `<p class="meta"><b>Notes:</b> ${esc(o.notes)}</p>` : ''}
+        <div class="actions">
+          <select data-status="${o.id}" aria-label="Status">
+            ${['new', 'confirmed', 'ready', 'done', 'cancelled'].map((s) => `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}
+          </select>
+          <button class="del" data-del="${o.id}">Delete</button>
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('[data-status]').forEach((s) => s.addEventListener('change', async () => { await api('/orders/' + s.dataset.status, { method: 'PATCH', body: { status: s.value } }); loadOrders(); }));
+    document.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => {
+      const o = orders.find((x) => x.id === Number(b.dataset.del));
+      if (!confirm(`Delete order ${o.code} from ${o.name}? This can't be undone.`)) return;
+      await api('/orders/' + o.id, { method: 'DELETE' }); loadOrders();
+    }));
+  }
+
+  function renderSheet() {
+    const live = orders.filter((o) => o.status !== 'cancelled');
+    if (!live.length) { $('sheet').innerHTML = '<div class="empty-state"><p>No orders in this range.</p></div>'; return; }
+    const wholes = {}, minis = {};
+    for (const o of live) for (const i of o.items) {
+      for (const [name, n] of Object.entries(i.counts || {})) {
+        if (i.type === 'whole') { const k = name + (i.gf ? ' (GF)' : ''); wholes[k] = (wholes[k] || 0) + i.qty; }
+        else minis[name] = (minis[name] || 0) + n * i.qty;
+      }
+    }
+    const tbl = (obj, unit) => Object.keys(obj).length ? `<table><thead><tr><th>Flavor</th><th>${unit}</th></tr></thead><tbody>${Object.entries(obj).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => `<tr><td>${esc(k)}</td><td><b>${v}</b></td></tr>`).join('')}</tbody></table>` : '<p class="muted">None</p>';
+    // Route sheet grouped by date, then stop
+    const groups = {};
+    for (const o of live) {
+      const key = `${o.fulfill_date}|${o.fulfillment === 'route' ? o.stop_label : o.fulfillment === 'pickup' ? 'BUB Shed pickup' : 'UPS shipping'}`;
+      (groups[key] = groups[key] || []).push(o);
+    }
+    const route = Object.keys(groups).sort().map((k) => {
+      const [d, place] = k.split('|');
+      return `<h3>${day(d)} · ${esc(place)}</h3><table><tbody>${groups[k].map((o) => `<tr><td style="width:28%"><b>${esc(o.name)}</b><br><span class="muted">${esc(o.phone)}</span></td><td>${o.items.map((i) => `${i.qty} × ${esc(i.label)}: ${esc(i.detail)}`).join('<br>')}${o.ship_address ? `<br><span class="muted">${esc(o.ship_address)}</span>` : ''}</td><td style="width:12%">${money(o.total_cents)}</td></tr>`).join('')}</tbody></table>`;
+    }).join('');
+    $('sheet').innerHTML = `<div class="grid2" style="margin-top:1rem"><div><h3>Whole cheesecakes to bake</h3>${tbl(wholes, 'Wholes')}</div><div><h3>Minis to bake</h3>${tbl(minis, 'Minis')}</div></div><h2 style="margin-top:2rem;font-size:1.6rem">Delivery &amp; pickup sheet</h2>${route}`;
+  }
+  $('range').addEventListener('change', loadOrders);
+  $('status-filter').addEventListener('change', loadOrders);
+
+  // ---------- flavors ----------
+  async function loadFlavors() {
+    const { flavors } = await api('/flavors');
+    $('flavor-rows').innerHTML = flavors.map((f) => `<tr data-id="${f.id}">
+      <td><input type="text" value="${esc(f.name)}" data-k="name" aria-label="Flavor name"></td>
+      <td><input type="checkbox" data-k="gf" ${f.gf ? 'checked' : ''} aria-label="Gluten friendly"></td>
+      <td><input type="checkbox" data-k="seasonal" ${f.seasonal ? 'checked' : ''} aria-label="Seasonal"></td>
+      <td><input type="checkbox" data-k="active" ${f.active ? 'checked' : ''} aria-label="On menu"></td>
+      <td><button class="del" data-delf>Delete</button></td></tr>`).join('');
+    $('flavor-rows').querySelectorAll('input').forEach((inp) => inp.addEventListener('change', () => {
+      const id = inp.closest('tr').dataset.id;
+      api('/flavors/' + id, { method: 'PATCH', body: { [inp.dataset.k]: inp.type === 'checkbox' ? inp.checked : inp.value } });
+    }));
+    $('flavor-rows').querySelectorAll('[data-delf]').forEach((b) => b.addEventListener('click', async () => {
+      const tr = b.closest('tr');
+      if (!confirm(`Delete ${tr.querySelector('[data-k=name]').value}? (Uncheck "On menu" instead to hide it for now.)`)) return;
+      await api('/flavors/' + tr.dataset.id, { method: 'DELETE' }); loadFlavors();
+    }));
+  }
+  $('nf-add').addEventListener('click', async () => {
+    if (!$('nf-name').value.trim()) return;
+    await api('/flavors', { method: 'POST', body: { name: $('nf-name').value, gf: $('nf-gf').checked, seasonal: $('nf-season').checked } });
+    $('nf-name').value = ''; $('nf-gf').checked = false; $('nf-season').checked = false; loadFlavors();
+  });
+
+  // ---------- stops ----------
+  async function loadStops() {
+    const { stops } = await api('/stops');
+    $('stop-rows').innerHTML = stops.map((s) => `<tr data-id="${s.id}">
+      <td><input type="text" value="${esc(s.name)}" data-k="name" aria-label="Shop name"></td>
+      <td><input type="text" value="${esc(s.town)}" data-k="town" aria-label="Town"></td>
+      <td><select data-k="day" aria-label="Day"><option ${s.day === 'Tuesday' ? 'selected' : ''}>Tuesday</option><option ${s.day === 'Wednesday' ? 'selected' : ''}>Wednesday</option></select></td>
+      <td class="hide-sm"><select data-k="route" aria-label="Route">${[1, 2, 3, 4].map((n) => `<option value="${n}" ${s.route === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
+      <td><input type="checkbox" data-k="active" ${s.active ? 'checked' : ''} aria-label="Showing"></td>
+      <td><button class="del" data-dels>Delete</button></td></tr>`).join('');
+    $('stop-rows').querySelectorAll('input,select').forEach((inp) => inp.addEventListener('change', () => {
+      const id = inp.closest('tr').dataset.id;
+      api('/stops/' + id, { method: 'PATCH', body: { [inp.dataset.k]: inp.type === 'checkbox' ? inp.checked : inp.value } });
+    }));
+    $('stop-rows').querySelectorAll('[data-dels]').forEach((b) => b.addEventListener('click', async () => {
+      const tr = b.closest('tr');
+      if (!confirm(`Delete ${tr.querySelector('[data-k=name]').value}?`)) return;
+      await api('/stops/' + tr.dataset.id, { method: 'DELETE' }); loadStops();
+    }));
+  }
+  $('ns-add').addEventListener('click', async () => {
+    if (!$('ns-name').value.trim() || !$('ns-town').value.trim()) return alert('Enter the shop name and town.');
+    await api('/stops', { method: 'POST', body: { name: $('ns-name').value, town: $('ns-town').value, day: $('ns-day').value, route: $('ns-route').value } });
+    $('ns-name').value = ''; $('ns-town').value = ''; loadStops();
+  });
+
+  // ---------- settings ----------
+  const priceFields = { 'p-whole': 'price_whole', 'p-gf': 'price_gf_addon', 'p-m6': 'price_mini6', 'p-m105': 'price_mini10x5', 'p-m1010': 'price_mini10x10' };
+  async function loadSettings() {
+    const { settings } = await api('/overview');
+    for (const [id, k] of Object.entries(priceFields)) $(id).value = (Number(settings[k]) / 100).toFixed(2);
+    $('s-open').checked = settings.orders_open !== '0';
+    $('s-ann').value = settings.announcement || '';
+  }
+  $('save-settings').addEventListener('click', async () => {
+    $('set-err').hidden = true; $('set-ok').hidden = true;
+    const body = { orders_open: $('s-open').checked, announcement: $('s-ann').value };
+    for (const [id, k] of Object.entries(priceFields)) body[k] = $(id).value.replace(/[$,\s]/g, '');
+    try { await api('/settings', { method: 'PUT', body }); $('set-ok').hidden = false; }
+    catch (e) { $('set-err').textContent = e.message; $('set-err').hidden = false; }
+  });
+
+  loadOverview().then(loadOrders);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order Cheesecake Online | Batter Up Bakery</title>
+<meta name="description" content="Order a whole cheesecake or mini variety pack from Batter Up Bakery. Free route meet-ups, pickup in Litchfield, or UPS shipping within Maine.">
+<link rel="canonical" href="https://batterupbakery.onrender.com/order">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Order Cheesecake Online | Batter Up Bakery">
+<meta property="og:description" content="Order a whole cheesecake or mini variety pack from Batter Up Bakery. Free route meet-ups, pickup in Litchfield, or UPS shipping within Maine.">
+<meta property="og:url" content="https://batterupbakery.onrender.com/order">
+<meta property="og:image" content="https://batterupbakery.onrender.com/img/og-logo.jpg">
+<meta property="og:image:width" content="960">
+<meta property="og:image:height" content="960">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://batterupbakery.onrender.com/img/og-logo.jpg">
+<meta name="theme-color" content="#56085c">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Graduate&family=Yellowtail&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<meta name="robots" content="index,follow">
+</head>
+<body>
+<div class="notice" id="notice">Order by <b>Saturday at 6 PM</b> for next week's delivery, pickup or shipping.</div>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Batter Up Bakery home"><img src="/img/logo.jpg" alt="Batter Up Bakery logo" width="74" height="74"><span>Batter Up<br>Bakery</span></a>
+    <button class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+    <nav class="nav" id="nav">
+      <a href="/#flavors">Flavors</a>
+      <a href="/#get-it">How to get it</a>
+      <a href="/find">Find a slice</a>
+      <a href="/#facebook">What's new</a>
+      <div class="social">
+        <a class="icon-btn" href="https://www.facebook.com/profile.php?id=100064381800560" target="_blank" rel="noopener" aria-label="Batter Up Bakery on Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8.2h2.8l.4-3.2h-3.2V8.5c0-.9.3-1.6 1.6-1.6h1.7V4.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.4H7.3v3.2h2.8V22h3.4z"/></svg></a>
+        <a class="icon-btn" href="https://m.me/100064381800560" target="_blank" rel="noopener" aria-label="Message us on Messenger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.4 2 2 6.1 2 11.6c0 2.9 1.2 5.4 3.2 7.1V22l3-1.6c1.2.3 2.5.5 3.8.5 5.6 0 10-4.1 10-9.4S17.6 2 12 2zm1 12.6-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7-5.4 5.8z"/></svg></a>
+        <a class="icon-btn" href="tel:+12075887628" aria-label="Call (207) 588-7628"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></a>
+      </div>
+      <a class="btn small" href="/order">Order online</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap page-hero">
+    <span class="eyebrow">Order online</span>
+    <h1 style="font-size:clamp(2rem,4vw,3rem)">Build your cheesecake order</h1>
+    <p class="lede" id="cycle-line">Order by Saturday at 6 PM for next week. We'll confirm your order by phone, text or email.</p>
+  </div>
+  <div class="wrap order-layout" id="order-app">
+    <div>
+      <div class="err" id="closed" hidden></div>
+
+      <div class="panel" id="step-items">
+        <h2>1. What would you like?</h2>
+        <p class="muted">Pick a size, choose flavors, then add it to your order. Add as many as you like.</p>
+        <div class="pack-picker" role="group" aria-label="Choose a size">
+          <button type="button" class="pack-opt" data-pack="whole" aria-pressed="true"><b>Whole cheesecake</b><span data-price="whole">$59.40</span><small>10 slices, 1 flavor</small></button>
+          <button type="button" class="pack-opt" data-pack="mini6" aria-pressed="false"><b>Mini 6-pack</b><span data-price="mini6">$38.80</span><small>Up to 6 flavors</small></button>
+          <button type="button" class="pack-opt" data-pack="mini10x5" aria-pressed="false"><b>Mini 10-pack</b><span data-price="mini10x5">$64.80</span><small>Up to 5 flavors</small></button>
+          <button type="button" class="pack-opt" data-pack="mini10x10" aria-pressed="false"><b>Mini 10-pack</b><span data-price="mini10x10">$70.20</span><small>Up to 10 flavors</small></button>
+        </div>
+        <div class="builder" id="builder"></div>
+      </div>
+
+      <form class="panel" id="step-details" novalidate>
+        <h2>2. How do you want to get it?</h2>
+        <p class="muted">Free route meet-ups, pickup at the BUB Shed, or UPS shipping in Maine.</p>
+        <div class="ways-pick" role="group" aria-label="How to get it">
+          <button type="button" class="pack-opt" data-way="route" aria-pressed="true"><b>Route meet-up</b><span>Free</span><small>Tuesday or Wednesday</small></button>
+          <button type="button" class="pack-opt" data-way="pickup" aria-pressed="false"><b>BUB Shed pickup</b><span>Free</span><small>Litchfield, Wed to Sat</small></button>
+          <button type="button" class="pack-opt" data-way="ship" aria-pressed="false"><b>Ship in Maine</b><span>Fee quoted</span><small>UPS, 24 to 48 hours</small></button>
+        </div>
+        <div data-show="route">
+          <label for="stop">Meet-up spot</label>
+          <select id="stop"><option value="">Choose a stop on our route…</option></select>
+          <p class="hint" id="stop-hint">We'll meet you there on delivery day and confirm the time.</p>
+        </div>
+        <div data-show="pickup" hidden>
+          <label for="pickup-day">Pickup day</label>
+          <select id="pickup-day"></select>
+          <p class="hint">BUB Shed, 1160 Lewiston Road, Litchfield. Open 9 AM to 5 PM for pickup.</p>
+        </div>
+        <div data-show="ship" hidden>
+          <label for="ship-address">Shipping address (Maine only)</label>
+          <textarea id="ship-address" rows="3" placeholder="Street, town, ME, ZIP" autocomplete="street-address"></textarea>
+          <p class="hint" id="ship-hint">Ships Wednesday by UPS. We'll text or email you the shipping fee to confirm before it goes out.</p>
+        </div>
+
+        <h2 style="margin-top:1.6rem">3. Your info</h2>
+        <div class="row">
+          <div><label for="name">Name</label><input id="name" autocomplete="name" required></div>
+          <div><label for="phone">Phone</label><input id="phone" type="tel" autocomplete="tel" required></div>
+        </div>
+        <div class="row">
+          <div><label for="email">Email <span class="muted">(optional, for a receipt)</span></label><input id="email" type="email" autocomplete="email"></div>
+          <div><label for="notes">Notes <span class="muted">(optional)</span></label><input id="notes" placeholder="Birthday, allergies, best time to reach you…"></div>
+        </div>
+        <div class="sr-only" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" tabindex="-1" autocomplete="off"></div>
+      </form>
+    </div>
+
+    <aside class="panel cart" aria-labelledby="cart-h">
+      <h2 id="cart-h">Your order</h2>
+      <ul class="cart-items" id="cart-items"></ul>
+      <p class="empty" id="cart-empty">Nothing added yet. Pick a size and flavors to start.</p>
+      <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+      <p class="hint" style="margin-top:0">Tax included. Pay when you get your order; we'll confirm details first.</p>
+      <div class="err" id="order-err" hidden></div>
+      <button class="btn" id="place" style="width:100%;justify-content:center" disabled>Place order</button>
+      <p class="hint center">Rather message us? <a href="https://m.me/100064381800560" target="_blank" rel="noopener">Order on Facebook Messenger</a></p>
+    </aside>
+  </div>
+
+  <div class="wrap" id="order-done" hidden>
+    <div class="panel done-card">
+      <img src="/img/logo.jpg" alt="" width="120" height="120" style="margin:0 auto 1rem;border-radius:50%">
+      <h2>Thank you! Your order is in.</h2>
+      <p>Your order number is</p>
+      <p class="code" id="done-code"></p>
+      <p class="lede" style="margin:1rem auto" id="done-line"></p>
+      <p class="muted">We'll reach out to confirm. Questions? Call or text <a href="tel:+12075887628">(207) 588-7628</a>.</p>
+      <a class="btn ghost" href="/">Back to home</a>
+    </div>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <a class="brand" href="/"><img src="/img/logo.jpg" alt="Batter Up Bakery logo" width="84" height="84"></a>
+        <p style="margin-top:1rem;max-width:36ch">Decadent cheesecakes from a small family bakery in Litchfield, Maine. Dozens of flavors, delivered to shops all over central and southern Maine.</p>
+        <div class="social">
+          <a class="icon-btn" href="https://www.facebook.com/profile.php?id=100064381800560" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8.2h2.8l.4-3.2h-3.2V8.5c0-.9.3-1.6 1.6-1.6h1.7V4.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.4H7.3v3.2h2.8V22h3.4z"/></svg></a>
+          <a class="icon-btn" href="https://m.me/100064381800560" target="_blank" rel="noopener" aria-label="Messenger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.4 2 2 6.1 2 11.6c0 2.9 1.2 5.4 3.2 7.1V22l3-1.6c1.2.3 2.5.5 3.8.5 5.6 0 10-4.1 10-9.4S17.6 2 12 2zm1 12.6-2.6-2.7-5 2.7 5.5-5.8 2.6 2.7 4.9-2.7-5.4 5.8z"/></svg></a>
+          <a class="icon-btn" href="tel:+12075887628" aria-label="Call"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></a>
+        </div>
+      </div>
+      <div>
+        <h3>Get in touch</h3>
+        <p><a href="tel:+12075887628">(207) 588-7628</a><br><a href="mailto:batterupbakerymaine@outlook.com">batterupbakerymaine@outlook.com</a><br><a href="https://m.me/100064381800560" target="_blank" rel="noopener">Message us on Facebook</a></p>
+      </div>
+      <div>
+        <h3>BUB Shed pickup</h3>
+        <p>1160 Lewiston Road, Litchfield, ME<br>Wednesday to Saturday, 9 AM to 5 PM<br><span style="color:#bca8bf">Pickup of pre-ordered cheesecakes only.</span></p>
+        <p><a href="/order">Order online</a> · <a href="/find">Find a slice</a></p>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; <span data-year></span> Batter Up Bakery · Litchfield, Maine</span>
+      <a href="https://getrealeasysites.com" target="_blank" rel="noopener">Website by Real Easy Sites</a>
+    </div>
+  </div>
+</footer>
+<div class="mobile-bar"><a class="btn lime" href="/order">Order online</a><a class="btn ghost" style="color:#fff;border-color:#fff" href="/find">Find a slice</a></div>
+
+<script src="/js/site.js"></script>
+<script src="/js/order.js"></script>
+</body>
+</html>
