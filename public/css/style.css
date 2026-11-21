@@ -288,3 +288,17 @@ label { font-weight: 600; font-size: .92rem; display: block; margin-bottom: .35r
   .search-row { flex-direction: column; }
 }
 body:not(.has-bar) .mobile-bar { display: none !important; }
+
+/* Readability over the paisley (Loreen: hard to read on mobile).
+   Heavier body text everywhere, plus a soft cream glow behind words that sit
+   directly on the pattern. Text inside white/plum bands is left as is. */
+body { font-weight: 500; }
+section:not(.band) p, section:not(.band) .eyebrow, .stat span, .page-hero p,
+section:not(.band) h1, section:not(.band) h2, section:not(.band) h3 {
+  text-shadow: 0 0 2px var(--cream), 0 0 8px var(--cream), 0 0 14px var(--cream);
+}
+@media (max-width: 860px) {
+  body { background-image: linear-gradient(rgba(251,248,241,.93), rgba(251,248,241,.93)), url('/img/paisley.jpg'); background-size: auto, 320px 320px; }
+  .lede, .section-head p { font-weight: 600; color: #2b1630; }
+  .stat span { color: #2b1630; }
+}
