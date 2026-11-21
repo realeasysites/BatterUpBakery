@@ -1,11 +1,11 @@
 /* Batter Up Bakery — Workbench layout, themed from the logo:
-   plum batter, celery-lime bowl, baseball stitching ring. */
+   plum batter, lime bowl, baseball stitching ring. */
 :root {
   --plum: #56085c;
   --plum-deep: #33043a;
   --plum-soft: #f3e9f4;
-  --lime: #d8e7a6;
-  --lime-deep: #9db54d;
+  --lime: #8dc63f;
+  --lime-deep: #6fa52a;
   --cream: #fbf8f1;
   --paper: #ffffff;
   --ink: #2b1630;
@@ -20,7 +20,12 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; font-family: var(--sans); color: var(--ink); background: var(--cream); line-height: 1.6; font-size: 17px; }
+body { margin: 0; font-family: var(--sans); color: var(--ink); line-height: 1.6; font-size: 17px;
+  /* Cheesecake paisley (made for Batter Up), softened under a cream wash so text stays easy to read.
+     To make the pattern stronger, lower the .86 values. */
+  background-color: var(--cream);
+  background-image: linear-gradient(rgba(251,248,241,.86), rgba(251,248,241,.86)), url('/img/paisley.jpg');
+  background-size: auto, 420px 420px; }
 img { max-width: 100%; display: block; }
 a { color: var(--plum); }
 h1, h2, h3 { font-family: var(--serif); line-height: 1.12; margin: 0 0 .5em; color: var(--plum-deep); letter-spacing: -.01em; }
@@ -48,7 +53,7 @@ p { margin: 0 0 1em; }
 .btn.ghost { background: transparent; color: var(--plum); }
 .btn.ghost:hover { background: var(--plum-soft); }
 .btn.lime { background: var(--lime); border-color: var(--lime); color: var(--plum-deep); }
-.btn.lime:hover { background: #cbdc8f; }
+.btn.lime:hover { background: #9fd44f; }
 .btn.small { padding: .5em 1em; font-size: .9rem; }
 .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
 
@@ -114,7 +119,7 @@ section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
 
 /* Ways to get it */
 .ways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
-.way { border-radius: var(--radius); padding: 1.6rem; background: rgba(255,255,255,.06); border: 1px solid rgba(216, 231, 166, .25); }
+.way { border-radius: var(--radius); padding: 1.6rem; background: rgba(255,255,255,.06); border: 1px solid rgba(141, 198, 63, .35); }
 .way .when { display: inline-block; background: var(--lime); color: var(--plum-deep); font-weight: 700; font-size: .85rem; padding: .3em .8em; border-radius: 999px; margin-bottom: 1rem; }
 .way h3 { font-size: 1.45rem; }
 .way p { color: #dccbde; margin: 0; }
