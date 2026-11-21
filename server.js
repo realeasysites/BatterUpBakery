@@ -10,12 +10,16 @@ app.disable('x-powered-by');
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // The V2 playground is a copy of the site: keep it out of Google so customers only find the real one.
+  if (process.env.PLAYGROUND === '1') res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   next();
 });
 
 // Admin first, so /admin always asks for the password before anything else.
 app.use(require('./routes/admin'));
-app.use(require('./routes/wholesale'));
+// Wholesale invoicing is an add-on: only on when WHOLESALE_ENABLED=1 (the V2 playground has it on).
+const WHOLESALE = process.env.WHOLESALE_ENABLED === '1';
+if (WHOLESALE) app.use(require('./routes/wholesale'));
 app.use('/api', express.json({ limit: '50kb' }), require('./routes/public'));
 
 app.get('/healthz', (req, res) => res.send('ok'));

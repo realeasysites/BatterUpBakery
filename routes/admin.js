@@ -35,7 +35,7 @@ router.get(['/admin', '/admin/'], requireAdmin, (req, res) => res.sendFile(path.
 router.use('/api/admin', requireAdmin, express.json({ limit: '200kb' }));
 
 router.get('/api/admin/overview', (req, res) => {
-  res.json({ cycle: currentCycle(), settings: getSettings() });
+  res.json({ cycle: currentCycle(), settings: getSettings(), features: { wholesale: process.env.WHOLESALE_ENABLED === '1', playground: process.env.PLAYGROUND === '1' } });
 });
 
 // Orders

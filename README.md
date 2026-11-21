@@ -17,6 +17,8 @@ Flavors, stops and prices are seeded from their pinned Facebook post on first ru
 | `SESSION_SECRET` | Long random string for the login cookie. |
 | `DATA_DIR` | Folder for the SQLite database. Point at the Render disk, e.g. `/var/data`. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Email sending (Gmail: smtp.gmail.com, 465, realeasy365@gmail.com, app password). |
+| `WHOLESALE_ENABLED` | `1` turns on the Wholesale invoicing add-on (on in the V2 playground, off on the real site until she buys it). |
+| `PLAYGROUND` | `1` on the V2 playground: shows a "playground" banner in the dashboard and keeps the copy out of Google. |
 | `NOTIFY_EMAIL` | Where new-order emails go (likely batterupbakerymaine@outlook.com). |
 
 Without SMTP the order is still saved; the log says `order BUB-XXXXX saved but NOT emailed`.

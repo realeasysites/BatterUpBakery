@@ -149,7 +149,7 @@ if (db.prepare('SELECT COUNT(*) n FROM stops').get().n === 0) {
 
 // Sample wholesale data so the owner can try invoicing before entering her real shops.
 // Prices are placeholders. "Clear sample data" in the dashboard removes all of it.
-if (db.prepare('SELECT COUNT(*) n FROM ws_customers').get().n === 0 && !db.prepare("SELECT value FROM settings WHERE key='ws_demo_seeded'").get()) {
+if (process.env.WHOLESALE_ENABLED === '1' && db.prepare('SELECT COUNT(*) n FROM ws_customers').get().n === 0 && !db.prepare("SELECT value FROM settings WHERE key='ws_demo_seeded'").get()) {
   const shops = db.prepare('SELECT name, town FROM stops ORDER BY sort LIMIT 10').all();
   const flavors = db.prepare('SELECT name FROM flavors WHERE active = 1 ORDER BY sort').all().map((f) => f.name);
   const insC = db.prepare('INSERT INTO ws_customers (name, town, price_mini_cents, price_whole_cents, demo) VALUES (?, ?, 350, 4500, 1)');

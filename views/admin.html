@@ -83,6 +83,7 @@
 </style>
 </head>
 <body>
+<div class="ok" id="playground-bar" hidden style="border-radius:0;text-align:center;margin:0">Playground version: try anything here, it won't affect your real website. Everything resets now and then.</div>
 <div class="top"><div class="wrap">
   <div style="display:flex;align-items:center;gap:.8rem"><img src="/img/logo.jpg" alt=""><b>Batter Up Orders</b></div>
   <form method="post" action="/admin/logout"><button>Sign out</button></form>
@@ -92,7 +93,7 @@
   <div class="tabs" role="tablist">
     <button role="tab" data-tab="orders" aria-selected="true">Orders <span class="count" id="new-count" hidden></span></button>
     <button role="tab" data-tab="sheet" aria-selected="false">Bake &amp; route sheet</button>
-    <button role="tab" data-tab="wholesale" aria-selected="false">Wholesale</button>
+    <button role="tab" data-tab="wholesale" aria-selected="false" hidden>Wholesale</button>
     <button role="tab" data-tab="flavors" aria-selected="false">Flavors</button>
     <button role="tab" data-tab="stops" aria-selected="false">Shops &amp; route</button>
     <button role="tab" data-tab="settings" aria-selected="false">Prices &amp; settings</button>
@@ -263,10 +264,13 @@
   }));
 
   // ---------- orders ----------
-  let overview, orders = [], wsForSheet = [];
+  let overview, orders = [], wsForSheet = [], wsOn = false;
   function flash(msg) { let f = document.getElementById('flash'); if (!f) { f = document.createElement('div'); f.id = 'flash'; f.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#33043a;color:#fff;padding:.6em 1.2em;border-radius:99px;font-weight:600;z-index:99;transition:opacity .3s'; document.body.appendChild(f); } f.textContent = msg; f.style.opacity = 1; clearTimeout(f._t); f._t = setTimeout(() => (f.style.opacity = 0), 1200); }
   async function loadOverview() {
     overview = await api('/overview');
+    wsOn = !!(overview.features && overview.features.wholesale);
+    document.querySelector('[data-tab="wholesale"]').hidden = !wsOn;
+    $('playground-bar').hidden = !(overview.features && overview.features.playground);
     const c = overview.cycle;
     const next = c.route.Tuesday.date;
     const cur = addDays(next, -7);
@@ -282,7 +286,7 @@
     const st = $('status-filter').value;
     const data = await api(`/orders?from=${from}&to=${to}&status=${st === 'open' ? 'all' : st}`);
     orders = st === 'open' ? data.orders.filter((o) => o.status !== 'done' && o.status !== 'cancelled') : data.orders;
-    wsForSheet = (await api(`/wholesale/invoices?from=${from}&to=${to}`)).invoices;
+    wsForSheet = wsOn ? (await api(`/wholesale/invoices?from=${from}&to=${to}`)).invoices : [];
     renderOrders(); renderSheet();
     const newN = data.orders.filter((o) => o.status === 'new').length;
     $('new-count').textContent = newN; $('new-count').hidden = !newN;
