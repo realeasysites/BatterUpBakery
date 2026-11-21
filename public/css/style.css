@@ -27,7 +27,7 @@ body { margin: 0; font-family: var(--sans); color: var(--ink); line-height: 1.6;
   background-color: var(--cream);
   background-image: linear-gradient(rgba(251,248,241,.86), rgba(251,248,241,.86)), url('/img/paisley.jpg');
   background-size: auto, 420px 420px; }
-img { max-width: 100%; display: block; }
+img { max-width: 100%; height: auto; display: block; }
 a { color: var(--plum); }
 h1, h2, h3 { font-family: var(--serif); line-height: 1.12; margin: 0 0 .5em; color: var(--plum-deep); letter-spacing: -.01em; }
 h1 { font-size: clamp(2.3rem, 5.2vw, 4rem); font-weight: 700; }
@@ -82,7 +82,7 @@ p { margin: 0 0 1em; }
 /* Hero */
 .hero { padding: clamp(2.5rem, 6vw, 5rem) 0 clamp(3rem, 6vw, 5rem); position: relative; overflow: hidden; }
 .hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
-.hero-logo { width: clamp(150px, 18vw, 210px); margin-bottom: 1.2rem; border-radius: 50%; box-shadow: var(--shadow); }
+.hero-logo { width: clamp(180px, 18vw, 220px); height: auto; aspect-ratio: 1 / 1; object-fit: contain; margin-bottom: 1.2rem; border-radius: 50%; box-shadow: var(--shadow); }
 .hero h1 .script { display: block; font-size: 1.15em; margin-top: .05em; }
 .hero .actions { display: flex; flex-wrap: wrap; gap: .8rem; margin: 1.6rem 0 2rem; }
 .stats { display: grid; grid-template-columns: repeat(4, auto); gap: 1.6rem; justify-content: start; }
