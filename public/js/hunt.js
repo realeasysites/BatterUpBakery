@@ -46,6 +46,12 @@
       .hunt-cake.found { animation:none; opacity:.35; filter:grayscale(1); cursor:default; }
       .hunt-cake.pop { animation: huntPop .5s ease; }
       @keyframes huntWiggle { 0%,86%,100% { transform: rotate(0) } 90% { transform: rotate(-14deg) } 94% { transform: rotate(12deg) } }
+      /* Bigger and livelier on computers, where they were too easy to miss */
+      @media (min-width: 861px) {
+        .hunt-cake { width:50px; height:50px; margin:0 .5rem; animation-duration: 2.2s; }
+        .hunt-cake:not(.found) svg { filter: drop-shadow(0 0 6px rgba(216,231,166,.95)) drop-shadow(0 3px 4px rgba(51,4,58,.3)); }
+        .hunt-cake:hover { transform: scale(1.15); }
+      }
       @keyframes huntPop { 0% { transform: scale(1) } 50% { transform: scale(1.7) rotate(10deg) } 100% { transform: scale(1) } }
       .hunt-pill { position:fixed; left:14px; bottom:14px; z-index:70; background:#33043a; color:#fff; border:2px solid #d8e7a6; border-radius:999px; padding:.45em .9em .45em .5em; font:700 .9rem 'DM Sans',sans-serif; display:flex; align-items:center; gap:.45em; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.25); }
       .hunt-pill svg { width:26px; height:26px; background:#fff; border-radius:50%; padding:2px; }
