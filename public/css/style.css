@@ -5,8 +5,8 @@
   --plum: #56085c;
   --plum-deep: #33043a;
   --plum-soft: #f3e9f4;
-  --lime: #8dc63f;
-  --lime-deep: #6fa52a;
+  --lime: #d8e7a6;
+  --lime-deep: #9db54d;
   --cream: #fbf8f1;
   --paper: #ffffff;
   --ink: #2b1630;
@@ -23,9 +23,9 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; font-family: var(--sans); color: var(--ink); line-height: 1.6; font-size: 17px;
   /* Cheesecake paisley (made for Batter Up), softened under a cream wash so text stays easy to read.
-     To make the pattern stronger, lower the .86 values. */
+     To make the pattern stronger, lower the .9 values. */
   background-color: var(--cream);
-  background-image: linear-gradient(rgba(251,248,241,.86), rgba(251,248,241,.86)), url('/img/paisley.jpg');
+  background-image: linear-gradient(rgba(251,248,241,.9), rgba(251,248,241,.9)), url('/img/paisley.jpg');
   background-size: auto, 420px 420px; }
 img { max-width: 100%; height: auto; display: block; }
 a { color: var(--plum); }
@@ -35,9 +35,9 @@ h2 { font-size: clamp(1.8rem, 3.6vw, 2.7rem); font-weight: 700; }
 h3 { font-size: 1.25rem; font-weight: 600; }
 p { margin: 0 0 1em; }
 .wrap { width: min(1180px, 92vw); margin: 0 auto; }
-.eyebrow { font-family: var(--varsity); text-transform: uppercase; letter-spacing: .12em; font-size: .8rem; color: var(--plum); display: inline-block; margin-bottom: .9rem; }
+.eyebrow { font-weight: 700; font-family: var(--varsity); text-transform: uppercase; letter-spacing: .12em; font-size: .8rem; color: var(--plum); display: inline-block; margin-bottom: .9rem; }
 .script { font-family: var(--script); color: var(--plum); font-weight: 400; letter-spacing: 0; }
-.lede { font-size: 1.15rem; color: var(--muted); max-width: 46ch; }
+.lede { font-size: 1.15rem; color: #3d2a41; font-weight: 500; max-width: 46ch; }
 .muted { color: var(--muted); }
 .center { text-align: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -54,7 +54,7 @@ p { margin: 0 0 1em; }
 .btn.ghost { background: transparent; color: var(--plum); }
 .btn.ghost:hover { background: var(--plum-soft); }
 .btn.lime { background: var(--lime); border-color: var(--lime); color: var(--plum-deep); }
-.btn.lime:hover { background: #9fd44f; }
+.btn.lime:hover { background: #cbdc8f; }
 .btn.small { padding: .5em 1em; font-size: .9rem; }
 .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
 
@@ -87,7 +87,7 @@ p { margin: 0 0 1em; }
 .hero .actions { display: flex; flex-wrap: wrap; gap: .8rem; margin: 1.6rem 0 2rem; }
 .stats { display: grid; grid-template-columns: repeat(4, auto); gap: 1.6rem; justify-content: start; }
 .stat b { display: block; font-family: var(--serif); font-size: 1.7rem; color: var(--plum); line-height: 1.1; }
-.stat span { font-size: .82rem; color: var(--muted); }
+.stat span { font-size: .85rem; color: #3d2a41; font-weight: 600; }
 .collage { display: grid; grid-template-columns: 1.25fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px; height: clamp(380px, 46vw, 560px); }
 .collage img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius); box-shadow: var(--shadow); }
 .collage img:first-child { grid-row: 1 / 3; }
@@ -96,7 +96,7 @@ p { margin: 0 0 1em; }
 /* Sections */
 section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
 .section-head { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.2rem; flex-wrap: wrap; }
-.section-head p { max-width: 52ch; margin: 0; color: var(--muted); }
+.section-head p { max-width: 52ch; margin: 0; color: #3d2a41; font-weight: 500; }
 .band { background: var(--paper); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .band.plum { background: var(--plum-deep); color: #f2e9f3; border: 0; }
 .band.plum h2, .band.plum h3 { color: #fff; }
@@ -114,7 +114,7 @@ section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
 .chip { display: inline-flex; align-items: center; gap: .45em; padding: .5em .95em; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); font-weight: 600; font-size: .95rem; }
 .tag { font-size: .68rem; font-weight: 800; letter-spacing: .06em; padding: .15em .5em; border-radius: 999px; background: var(--lime); color: var(--plum-deep); }
 .tag.season { background: var(--plum-soft); color: var(--plum); }
-.legend { margin-top: 1.2rem; font-size: .92rem; color: var(--muted); }
+.legend { margin-top: 1.2rem; font-size: .95rem; color: #3d2a41; font-weight: 600; }
 
 /* Size cards */
 .sizes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
@@ -126,7 +126,7 @@ section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
 
 /* Ways to get it */
 .ways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
-.way { border-radius: var(--radius); padding: 1.6rem; background: rgba(255,255,255,.06); border: 1px solid rgba(141, 198, 63, .35); }
+.way { border-radius: var(--radius); padding: 1.6rem; background: rgba(255,255,255,.06); border: 1px solid rgba(216, 231, 166, .3); }
 .way .when { display: inline-block; background: var(--lime); color: var(--plum-deep); font-weight: 700; font-size: .85rem; padding: .3em .8em; border-radius: 999px; margin-bottom: 1rem; }
 .way h3 { font-size: 1.45rem; }
 .way p { color: #dccbde; margin: 0; }

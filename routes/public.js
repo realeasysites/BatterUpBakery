@@ -93,6 +93,7 @@ router.post('/orders', async (req, res) => {
       fulfill_date = day.date;
       fulfillment_label = `Pickup at the BUB Shed (1160 Lewiston Rd, Litchfield) on ${day.label}, 9 AM to 5 PM`;
     } else if (fulfillment === 'ship') {
+      if (items.some((i) => i.type === 'whole')) throw new OrderError("Whole cheesecakes can't be shipped. Please choose pickup or a route meet-up, or ship only mini packs.");
       ship_address = clean(b.ship_address, 300);
       if (ship_address.length < 10) throw new OrderError('Please enter the full shipping address.');
       if (!/\b(ME|Maine)\b/i.test(ship_address)) throw new OrderError('We ship within the State of Maine. Please include ME in the address.');

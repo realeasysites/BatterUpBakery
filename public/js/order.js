@@ -157,6 +157,7 @@
     $('cart-empty').hidden = state.cart.length > 0;
     $('cart-total').textContent = money(state.cart.reduce((t, it) => t + unitPrice(it) * it.qty, 0));
     $('place').disabled = state.cart.length === 0 || !M.orders_open;
+    if (typeof shipCheck === 'function' && state.way === 'ship') shipCheck();
   }
 
   // ---------- fulfillment ----------
@@ -164,7 +165,12 @@
     state.way = b.dataset.way;
     document.querySelectorAll('[data-way]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     document.querySelectorAll('[data-show]').forEach((el) => (el.hidden = el.dataset.show !== state.way));
+    shipCheck();
   }));
+  function shipCheck() {
+    const bad = state.way === 'ship' && state.cart.some((it) => it.type === 'whole');
+    showErr(bad ? "Whole cheesecakes can't be shipped. Choose pickup or a route meet-up, or remove the whole cheesecake to ship your mini packs." : '');
+  }
 
   function setupFulfillment(stopList) {
     const c = M.cycle;
@@ -186,7 +192,7 @@
         : 'We\'ll meet you there on delivery day and confirm the time.';
     });
     $('pickup-day').innerHTML = c.pickup.map((d) => `<option value="${d.date}">${esc(d.label)}, 9 AM to 5 PM</option>`).join('');
-    $('ship-hint').textContent = `Ships ${c.ship.label} by UPS (24 to 48 hours in Maine). We'll text or email you the shipping fee to confirm before it goes out.`;
+    $('ship-hint').textContent = `Mini packs only (whole cheesecakes can't be shipped). Ships ${c.ship.label} by UPS (24 to 48 hours in Maine). We'll text or email you the shipping fee to confirm before it goes out.`;
     $('cycle-line').innerHTML = `Orders placed now are for the week of <b>${esc(short(c.route.Tuesday.date))}</b>. This week's cutoff is <b>${esc(c.cutoff.label)}</b>. We'll confirm your order by phone, text or email.`;
   }
 
@@ -204,6 +210,7 @@
       website: $('website').value
     };
     if (state.way === 'route' && !body.stop_id) return showErr('Please choose a meet-up spot on our route.');
+    if (state.way === 'ship' && state.cart.some((it) => it.type === 'whole')) return showErr("Whole cheesecakes can't be shipped. Choose pickup or a route meet-up, or remove the whole cheesecake to ship your mini packs.");
     if (state.way === 'ship' && body.ship_address.trim().length < 10) return showErr('Please enter your full shipping address in Maine.');
     if (!body.name.trim()) return showErr('Please enter your name.');
     if (body.phone.replace(/\D/g, '').length < 10) return showErr('Please enter a phone number we can reach you at.');
