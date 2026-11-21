@@ -144,9 +144,17 @@ router.post('/api/admin/wholesale/repeat', (req, res) => {
 
 // Totals for a week, month, quarter or year: dollars, paid/unpaid, quantities and per-flavor counts.
 router.get('/api/admin/wholesale/report', (req, res) => {
-  const period = ['week', 'month', 'quarter', 'year'].includes(req.query.period) ? req.query.period : 'week';
+  const period = ['week', 'month', 'quarter', 'year', 'custom'].includes(req.query.period) ? req.query.period : 'week';
   const date = isoDate(req.query.date) ? req.query.date : todayMaine();
-  const [from, to] = periodRange(period, date);
+  let from, to;
+  if (period === 'custom') {
+    // Any date range the owner picks (e.g. Nov 3 to Dec 15). Swapped if entered backwards.
+    from = isoDate(req.query.from) ? req.query.from : date;
+    to = isoDate(req.query.to) ? req.query.to : from;
+    if (from > to) [from, to] = [to, from];
+  } else {
+    [from, to] = periodRange(period, date);
+  }
   const rows = db.prepare(withCustomer + ' WHERE i.invoice_date BETWEEN ? AND ?').all(from, to).map(parse);
   const out = { period, from, to, invoices: rows.length, total_cents: 0, paid_cents: 0, unpaid_cents: 0, minis: 0, wholes: 0, flavors: {}, shops: {} };
   for (const r of rows) {

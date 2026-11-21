@@ -139,8 +139,12 @@
 
     <div data-wsp="totals" hidden>
       <div class="bar">
-        <select id="ws-period"><option value="week">Week</option><option value="month">Month</option><option value="quarter">Quarter</option><option value="year">Year</option></select>
-        <input type="date" id="ws-date" style="width:auto">
+        <select id="ws-period"><option value="week">Week</option><option value="month">Month</option><option value="quarter">Quarter</option><option value="year">Year</option><option value="custom">Custom dates</option></select>
+        <input type="date" id="ws-date" style="width:auto" aria-label="Date">
+        <span id="ws-custom" hidden style="display:inline-flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+          <label for="ws-from" style="margin:0">From</label><input type="date" id="ws-from" style="width:auto">
+          <label for="ws-to" style="margin:0">To</label><input type="date" id="ws-to" style="width:auto">
+        </span>
       </div>
       <div id="ws-report"></div>
     </div>
@@ -557,7 +561,10 @@
 
   // totals
   async function wsReport() {
-    const r = await api(`/wholesale/report?period=${$('ws-period').value}&date=${$('ws-date').value || todayISO()}`);
+    const custom = $('ws-period').value === 'custom';
+    $('ws-custom').hidden = !custom; $('ws-date').hidden = custom;
+    if (custom && !$('ws-from').value) { $('ws-to').value = todayISO(); $('ws-from').value = addDays(todayISO(), -30); }
+    const r = await api(`/wholesale/report?period=${$('ws-period').value}&date=${$('ws-date').value || todayISO()}&from=${$('ws-from').value}&to=${$('ws-to').value}`);
     const flav = Object.entries(r.flavors).sort((a, b) => (b[1].minis + b[1].wholes) - (a[1].minis + a[1].wholes));
     const shops = Object.entries(r.shops).sort((a, b) => b[1] - a[1]);
     $('ws-report').innerHTML = `
@@ -575,6 +582,8 @@
   }
   $('ws-period').addEventListener('change', wsReport);
   $('ws-date').addEventListener('change', wsReport);
+  $('ws-from').addEventListener('change', wsReport);
+  $('ws-to').addEventListener('change', wsReport);
 
   // shops
   async function wsShops() {
