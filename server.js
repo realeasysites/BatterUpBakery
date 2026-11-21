@@ -20,6 +20,7 @@ app.use(require('./routes/admin'));
 // Wholesale invoicing is an add-on: only on when WHOLESALE_ENABLED=1 (the V2 playground has it on).
 const WHOLESALE = process.env.WHOLESALE_ENABLED === '1';
 if (WHOLESALE) app.use(require('./routes/wholesale'));
+app.use(require('./routes/hunt'));
 app.use('/api', express.json({ limit: '50kb' }), require('./routes/public'));
 
 app.get('/healthz', (req, res) => res.send('ok'));

@@ -94,6 +94,7 @@
     <button role="tab" data-tab="orders" aria-selected="true">Orders <span class="count" id="new-count" hidden></span></button>
     <button role="tab" data-tab="sheet" aria-selected="false">Bake &amp; route sheet</button>
     <button role="tab" data-tab="wholesale" aria-selected="false" hidden>Wholesale</button>
+    <button role="tab" data-tab="giveaway" aria-selected="false">Giveaway</button>
     <button role="tab" data-tab="flavors" aria-selected="false">Flavors</button>
     <button role="tab" data-tab="stops" aria-selected="false">Shops &amp; route</button>
     <button role="tab" data-tab="settings" aria-selected="false">Prices &amp; settings</button>
@@ -182,6 +183,30 @@
     </form>
   </dialog>
 
+  <section data-panel="giveaway" style="padding:0" hidden>
+    <div class="card">
+      <h3>The Great Cheesecake Hunt</h3>
+      <p class="meta" id="hunt-status"></p>
+      <div class="bar" style="margin-top:.6rem">
+        <label class="check" style="margin:0"><input type="checkbox" id="hunt-on"> Hunt is on</label>
+        <label for="hunt-start" style="margin:0">Starts</label><input type="date" id="hunt-start" style="width:auto">
+        <label for="hunt-end" style="margin:0">Ends</label><input type="date" id="hunt-end" style="width:auto">
+        <label for="hunt-winners" style="margin:0">Winners</label><input id="hunt-winners" inputmode="numeric" style="width:70px">
+      </div>
+      <label for="hunt-prize">Prize (each winner gets)</label><input id="hunt-prize">
+      <div class="bar" style="margin-top:.8rem">
+        <button class="btn small" id="hunt-save">Save</button>
+        <a class="pill" href="/?hunt=preview" target="_blank" style="text-decoration:none;color:inherit">Preview the hunt</a>
+      </div>
+    </div>
+    <div class="bar">
+      <button class="btn small" id="hunt-draw">Pick winners at random</button>
+      <button class="del" id="hunt-clear">Clear all entries</button>
+      <span class="muted" id="hunt-count"></span>
+    </div>
+    <div id="hunt-list"></div>
+  </section>
+
   <section data-panel="flavors" style="padding:0" hidden>
     <div class="card no-print">
       <h3>Add a flavor</h3>
@@ -258,6 +283,7 @@
     document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
     $('range-bar').hidden = !(tab === 'orders' || tab === 'sheet');
     if (tab === 'wholesale') wsLoad();
+    if (tab === 'giveaway') huntLoad();
     if (tab === 'flavors') loadFlavors();
     if (tab === 'stops') loadStops();
     if (tab === 'settings') loadSettings();
@@ -577,6 +603,38 @@
     await api('/wholesale/customers', { method: 'POST', body: { name: $('wc-name').value, town: $('wc-town').value, email: $('wc-email').value, price_mini: $('wc-mini').value.replace(/[$,]/g, ''), price_whole: $('wc-whole').value.replace(/[$,]/g, '') } });
     ['wc-name', 'wc-town', 'wc-email', 'wc-mini', 'wc-whole'].forEach((id) => ($(id).value = ''));
     wsShops();
+  });
+
+
+  // ---------- giveaway ----------
+  async function huntLoad() {
+    const h = await api('/hunt');
+    $('hunt-on').checked = h.on; $('hunt-start').value = h.start || ''; $('hunt-end').value = h.end || '';
+    $('hunt-winners').value = h.winners; $('hunt-prize').value = h.prize || '';
+    $('hunt-status').textContent = !h.on ? 'Turned off: the hunt is hidden from the website.' : h.open ? `Live now. Entries close ${day(h.end)} at midnight.` : h.started ? 'Ended. Pick your winners below.' : `Starts ${day(h.start)}. Until then only the preview link shows it.`;
+    $('hunt-count').textContent = `${h.entries.length} entr${h.entries.length === 1 ? 'y' : 'ies'}`;
+    if (!h.entries.length) { $('hunt-list').innerHTML = '<div class="empty-state"><h3>No entries yet</h3><p>People who find all 5 cheesecakes and enter will show up here.</p></div>'; return; }
+    $('hunt-list').innerHTML = `<table class="cards"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Entered</th><th></th></tr></thead><tbody>${h.entries.map((e) => `<tr ${e.winner ? 'style="background:#e9f4d2"' : ''}>
+      <td><b>${e.winner ? '🏆 ' : ''}${esc(e.name)}</b></td>
+      <td data-l="Phone"><a href="tel:${esc(e.phone)}">${esc(e.phone)}</a></td>
+      <td data-l="Email">${esc(e.email || '')}</td>
+      <td data-l="Entered">${esc(new Date(e.created_at.replace(' ', 'T') + 'Z').toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }))}</td>
+      <td><button class="pill" data-hwin="${e.id}" data-v="${e.winner ? 0 : 1}">${e.winner ? 'Undo winner' : 'Make winner'}</button> <button class="del" data-hdel="${e.id}">Delete</button></td></tr>`).join('')}</tbody></table>`;
+    document.querySelectorAll('[data-hwin]').forEach((b) => b.addEventListener('click', async () => { await api('/hunt/entries/' + b.dataset.hwin, { method: 'PATCH', body: { winner: b.dataset.v === '1' } }); huntLoad(); }));
+    document.querySelectorAll('[data-hdel]').forEach((b) => b.addEventListener('click', async () => { if (!confirm('Delete this entry?')) return; await api('/hunt/entries/' + b.dataset.hdel, { method: 'DELETE' }); huntLoad(); }));
+  }
+  $('hunt-save').addEventListener('click', async () => {
+    await api('/hunt', { method: 'PUT', body: { on: $('hunt-on').checked, start: $('hunt-start').value, end: $('hunt-end').value, winners: $('hunt-winners').value, prize: $('hunt-prize').value } });
+    flash('Saved'); huntLoad();
+  });
+  $('hunt-draw').addEventListener('click', async () => {
+    const r = await api('/hunt/draw', { method: 'POST' });
+    flash(r.picked ? `Picked ${r.picked} winner${r.picked === 1 ? '' : 's'}!` : 'Winners already picked (undo one to redraw)');
+    huntLoad();
+  });
+  $('hunt-clear').addEventListener('click', async () => {
+    if (!confirm('Delete ALL giveaway entries? Do this after testing, before the hunt starts.')) return;
+    await api('/hunt/clear', { method: 'POST' }); huntLoad();
   });
 
   loadOverview().then(loadOrders);

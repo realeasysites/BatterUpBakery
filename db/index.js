@@ -53,6 +53,17 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(fulfill_date);
 
+-- Cheesecake Hunt giveaway entries (one per phone number).
+CREATE TABLE IF NOT EXISTS hunt_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  phone_key TEXT NOT NULL UNIQUE,      -- digits only, for one-entry-per-phone
+  email TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  winner INTEGER NOT NULL DEFAULT 0
+);
+
 -- Wholesale: shops that buy for resale, and the weekly invoices sent to them.
 CREATE TABLE IF NOT EXISTS ws_customers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,6 +98,11 @@ const DEFAULT_SETTINGS = {
   price_mini10x5: '6480',
   price_mini10x10: '7020',
   orders_open: '1',
+  hunt_on: '1',
+  hunt_start: '2026-11-27',             // first day it shows to the public (launch day)
+  hunt_end: '2026-12-06',               // last day to enter (Maine time, through 11:59 PM)
+  hunt_prize: 'a 10-flavor mini variety pack',
+  hunt_winners: '2',
   announcement: ''
 };
 const insSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
