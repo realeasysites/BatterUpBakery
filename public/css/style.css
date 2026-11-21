@@ -103,7 +103,13 @@ section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
 .band.plum .muted, .band.plum .section-head p { color: #d8c6da; }
 
 /* Flavor board */
-.flavor-board { display: flex; flex-wrap: wrap; gap: .55rem; }
+.flavor-board .chips { display: flex; flex-wrap: wrap; gap: .55rem; }
+.flavor-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; margin-bottom: 1.6rem; }
+.fcard { margin: 0; background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 6px 18px rgba(51,4,58,.06); transition: transform .2s; }
+.fcard:hover { transform: translateY(-3px); }
+.fcard img { width: 100%; aspect-ratio: 3 / 4; height: auto; object-fit: cover; object-position: center 40%; }
+.fcard figcaption { padding: .6rem .8rem .7rem; font-weight: 700; font-size: .95rem; display: flex; align-items: center; gap: .4em; flex-wrap: wrap; }
+.more-flavors { font-size: 1.1rem; margin: .4rem 0 .8rem; }
 .chip { display: inline-flex; align-items: center; gap: .45em; padding: .5em .95em; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); font-weight: 600; font-size: .95rem; }
 .tag { font-size: .68rem; font-weight: 800; letter-spacing: .06em; padding: .15em .5em; border-radius: 999px; background: var(--lime); color: var(--plum-deep); }
 .tag.season { background: var(--plum-soft); color: var(--plum); }
@@ -191,6 +197,8 @@ label { font-weight: 600; font-size: .92rem; display: block; margin-bottom: .35r
 .fp button { width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--plum); color: #fff; font-size: 1.1rem; cursor: pointer; line-height: 1; }
 .fp button:disabled { background: #cfc3d1; cursor: not-allowed; }
 .fp output { min-width: 1.2em; text-align: center; }
+.fp-name { display: flex; align-items: center; gap: .5rem; }
+.fp-thumb { width: 30px; height: 40px; object-fit: cover; border-radius: 6px; flex: none; }
 .fp.radio { cursor: pointer; }
 .progress { display: flex; justify-content: space-between; align-items: center; margin: .2rem 0 .8rem; font-weight: 600; }
 .progress .bar { flex: 1; height: 8px; background: var(--plum-soft); border-radius: 99px; margin: 0 1rem; overflow: hidden; }
@@ -254,6 +262,7 @@ label { font-weight: 600; font-size: .92rem; display: block; margin-bottom: .35r
   body.has-bar { padding-bottom: 70px; }
 }
 @media (max-width: 560px) {
+  .flavor-photos { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   body { font-size: 16px; }
   .brand img { width: 58px; height: 58px; }
   .brand span { display: none; }

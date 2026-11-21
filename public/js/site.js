@@ -51,9 +51,12 @@
     // Flavor board
     const board = document.getElementById('flavor-board');
     if (board && m.flavors.length) {
-      board.innerHTML = m.flavors.map((f) =>
-        `<span class="chip">${esc(f.name)}${f.gf ? ' <span class="tag" title="Can be made gluten friendly as a whole cheesecake">GF</span>' : ''}${f.seasonal ? ' <span class="tag season">Seasonal</span>' : ''}</span>`
-      ).join('');
+      const tags = (f) => `${f.gf ? ' <span class="tag" title="Can be made gluten friendly as a whole cheesecake">GF</span>' : ''}${f.seasonal ? ' <span class="tag season">Seasonal</span>' : ''}`;
+      const withPhoto = m.flavors.filter((f) => f.photo);
+      const rest = m.flavors.filter((f) => !f.photo);
+      board.innerHTML =
+        (withPhoto.length ? `<div class="flavor-photos">${withPhoto.map((f) => `<figure class="fcard"><img src="${esc(f.photo)}" alt="${esc(f.name)} mini cheesecakes" loading="lazy"><figcaption>${esc(f.name)}${tags(f)}</figcaption></figure>`).join('')}</div>` : '') +
+        (rest.length ? `${withPhoto.length ? '<h3 class="more-flavors">More flavors</h3>' : ''}<div class="chips">${rest.map((f) => `<span class="chip">${esc(f.name)}${tags(f)}</span>`).join('')}</div>` : '');
     }
   }).catch(() => {});
 

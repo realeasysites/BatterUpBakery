@@ -7,8 +7,27 @@ const { sendOrderEmails } = require('../lib/mailer');
 
 const router = express.Router();
 
+// Flavor photos: drop a file named after the flavor (e.g. "Brownie Bash" -> brownie-bash.jpg)
+// into public/img/flavors and it shows up on the site. ?v= busts the cache when a photo is replaced.
+const fs = require('fs');
+const path = require('path');
+const FLAVOR_DIR = path.join(__dirname, '..', 'public', 'img', 'flavors');
+const slug = (name) => name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+function flavorPhotos() {
+  const out = {};
+  try {
+    for (const f of fs.readdirSync(FLAVOR_DIR)) {
+      const m = f.match(/^(.+)\.(jpe?g|png|webp)$/i);
+      if (m) out[m[1].toLowerCase()] = `/img/flavors/${f}?v=${Math.floor(fs.statSync(path.join(FLAVOR_DIR, f)).mtimeMs)}`;
+    }
+  } catch (e) { /* no photos folder yet */ }
+  return out;
+}
+
 function activeFlavors() {
-  return db.prepare('SELECT id, name, gf, seasonal FROM flavors WHERE active = 1 ORDER BY sort, name').all();
+  const photos = flavorPhotos();
+  return db.prepare('SELECT id, name, gf, seasonal FROM flavors WHERE active = 1 ORDER BY sort, name').all()
+    .map((f) => ({ ...f, photo: photos[slug(f.name)] || null }));
 }
 function activeStops() {
   return db.prepare('SELECT id, name, town, day, route FROM stops WHERE active = 1 ORDER BY day DESC, route, sort, name').all();
