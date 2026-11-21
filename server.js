@@ -15,6 +15,7 @@ app.use((req, res, next) => {
 
 // Admin first, so /admin always asks for the password before anything else.
 app.use(require('./routes/admin'));
+app.use(require('./routes/wholesale'));
 app.use('/api', express.json({ limit: '50kb' }), require('./routes/public'));
 
 app.get('/healthz', (req, res) => res.send('ok'));

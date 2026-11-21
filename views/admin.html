@@ -42,7 +42,43 @@
   .ok { background: #e9f4d2; color: #3c5410; border-radius: 12px; padding: .6rem 1rem; font-weight: 600; }
   .sheet h3 { margin-top: 1.4rem; }
   .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); background: #fff; border-radius: 16px; }
-  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } .hide-sm { display: none; } }
+  .subtabs { display: flex; gap: .3rem; margin-bottom: 1rem; border-bottom: 1px solid var(--line); }
+  .subtabs button { border: 0; background: none; padding: .6em 1em; font: 600 .95rem var(--sans); cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; }
+  .subtabs button[aria-selected="true"] { color: var(--plum); border-color: var(--plum); }
+  .weekbar b { font-size: 1.1rem; min-width: 220px; text-align: center; }
+  .weekbar .pill { width: 44px; height: 44px; padding: 0; font-size: 1.4rem; }
+  .stats4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; margin-bottom: 1.2rem; }
+  .stats4 div { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: .9rem 1rem; }
+  .stats4 b { display: block; font-family: var(--serif); font-size: 1.5rem; color: var(--plum); }
+  .stats4 span { color: var(--muted); font-size: .85rem; }
+  dialog { border: 0; border-radius: 20px; padding: 1.5rem; width: min(640px, 96vw); max-height: 92vh; box-shadow: 0 30px 80px rgba(0,0,0,.3); }
+  dialog::backdrop { background: rgba(51,4,58,.45); }
+  .line { display: grid; grid-template-columns: 1.6fr .9fr .7fr .8fr 40px; gap: .4rem; margin-bottom: .45rem; align-items: center; }
+  .line input, .line select { padding: .55em .6em; }
+  .line .x { background: none; border: 0; color: #a01b2f; font-size: 1.3rem; cursor: pointer; }
+  .line-head { font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .2rem; }
+  .pill { border: 1.5px solid var(--line); background: #fff; border-radius: 999px; padding: .5em 1em; font: 600 .92rem var(--sans); cursor: pointer; }
+  /* Phones: tables become easy-to-tap cards */
+  @media (max-width: 760px) {
+    .grid2 { grid-template-columns: 1fr; } .hide-sm { display: none; }
+    .stats4 { grid-template-columns: 1fr 1fr; }
+    .tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: .3rem; }
+    .tabs button { flex: none; }
+    table.cards thead { display: none; }
+    table.cards, table.cards tbody, table.cards tr, table.cards td { display: block; width: 100%; }
+    table.cards { background: none; }
+    table.cards tr { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: .7rem .9rem; margin-bottom: .7rem; }
+    table.cards td { border: 0; padding: .3rem 0; display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+    table.cards td[data-l]::before { content: attr(data-l); font-weight: 600; color: var(--muted); font-size: .85rem; }
+    table.cards td input[type=text] { font-size: 1.05rem; padding: .65em .8em; }
+    table.cards td input[type=checkbox] { width: 26px; height: 26px; }
+    table.cards td select { width: auto; }
+    .line { grid-template-columns: 1.15fr .8fr .95fr 34px; padding-bottom: .55rem; border-bottom: 1px dashed var(--line); }
+    .line .fl { grid-column: 1 / -1; }
+    .line-head { border: 0; padding: 0; }
+    .line-head .fl { display: none; }
+    .bar input { width: 100% !important; }
+  }
   @media print { .top, .tabs, .bar, .no-print { display: none !important; } body { background: #fff; } }
 </style>
 </head>
@@ -56,6 +92,7 @@
   <div class="tabs" role="tablist">
     <button role="tab" data-tab="orders" aria-selected="true">Orders <span class="count" id="new-count" hidden></span></button>
     <button role="tab" data-tab="sheet" aria-selected="false">Bake &amp; route sheet</button>
+    <button role="tab" data-tab="wholesale" aria-selected="false">Wholesale</button>
     <button role="tab" data-tab="flavors" aria-selected="false">Flavors</button>
     <button role="tab" data-tab="stops" aria-selected="false">Shops &amp; route</button>
     <button role="tab" data-tab="settings" aria-selected="false">Prices &amp; settings</button>
@@ -75,6 +112,75 @@
   <section data-panel="orders" style="padding:0"><div id="orders"></div></section>
   <section data-panel="sheet" style="padding:0" hidden><button class="btn small no-print" onclick="print()">Print</button><div class="sheet" id="sheet"></div></section>
 
+  <section data-panel="wholesale" style="padding:0" hidden>
+    <div class="ok" id="ws-demo-note" hidden style="margin-bottom:1rem">This is sample data so you can try it out. Prices are placeholders. <button class="del" id="ws-clear" style="margin-left:.5rem">Clear sample data</button></div>
+    <div class="subtabs">
+      <button data-ws="invoices" aria-selected="true">Invoices</button>
+      <button data-ws="totals" aria-selected="false">Totals</button>
+      <button data-ws="shops" aria-selected="false">Shops</button>
+    </div>
+
+    <div data-wsp="invoices">
+      <div class="bar weekbar">
+        <button class="pill" id="ws-prev" aria-label="Previous week">‹</button>
+        <b id="ws-week-label"></b>
+        <button class="pill" id="ws-next" aria-label="Next week">›</button>
+      </div>
+      <div class="bar">
+        <button class="btn small" id="ws-repeat">Repeat last week's invoices</button>
+        <button class="btn small ghost" id="ws-new">+ New invoice</button>
+      </div>
+      <div class="err" id="ws-err" hidden></div><div class="ok" id="ws-ok" hidden></div>
+      <div id="ws-week-sum" class="muted" style="margin-bottom:.6rem"></div>
+      <div id="ws-list"></div>
+    </div>
+
+    <div data-wsp="totals" hidden>
+      <div class="bar">
+        <select id="ws-period"><option value="week">Week</option><option value="month">Month</option><option value="quarter">Quarter</option><option value="year">Year</option></select>
+        <input type="date" id="ws-date" style="width:auto">
+      </div>
+      <div id="ws-report"></div>
+    </div>
+
+    <div data-wsp="shops" hidden>
+      <div class="card no-print">
+        <h3>Add a shop</h3>
+        <div class="bar" style="margin:.6rem 0 0">
+          <input id="wc-name" placeholder="Shop name" style="flex:1;min-width:180px">
+          <input id="wc-town" placeholder="Town" style="width:150px">
+          <input id="wc-email" placeholder="Email for invoices" style="width:220px">
+          <input id="wc-mini" placeholder="$ per mini" inputmode="decimal" style="width:110px">
+          <input id="wc-whole" placeholder="$ per whole" inputmode="decimal" style="width:110px">
+          <button class="btn small" id="wc-add">Add shop</button>
+        </div>
+      </div>
+      <div id="wc-list"></div>
+    </div>
+  </section>
+
+  <dialog id="inv-dlg">
+    <form method="dialog" id="inv-form">
+      <h3 id="inv-title" style="margin-top:0">New invoice</h3>
+      <div class="row">
+        <div><label for="inv-cust">Shop</label><select id="inv-cust"></select></div>
+        <div><label for="inv-date">Date</label><input type="date" id="inv-date"></div>
+      </div>
+      <label>Items</label>
+      <div class="line line-head" aria-hidden="true"><span class="fl">Flavor</span><span>Type</span><span>Qty</span><span>$ each</span><span></span></div>
+      <div id="inv-lines"></div>
+      <button type="button" class="btn small ghost" id="inv-addline">+ Add a flavor</button>
+      <label for="inv-notes" style="margin-top:1rem">Notes (optional)</label>
+      <input id="inv-notes">
+      <div class="cart-total" style="margin-top:1rem"><span>Total</span><span id="inv-total">$0.00</span></div>
+      <div class="err" id="inv-err" hidden></div>
+      <div class="bar" style="justify-content:flex-end;margin-top:.8rem">
+        <button type="button" class="btn small ghost" id="inv-cancel">Cancel</button>
+        <button type="button" class="btn small" id="inv-save">Save invoice</button>
+      </div>
+    </form>
+  </dialog>
+
   <section data-panel="flavors" style="padding:0" hidden>
     <div class="card no-print">
       <h3>Add a flavor</h3>
@@ -86,7 +192,7 @@
       </div>
     </div>
     <p class="muted">Uncheck <b>On menu</b> to hide a flavor without deleting it. GF means it can be made gluten friendly as a whole cheesecake.</p>
-    <table><thead><tr><th>Flavor</th><th>GF</th><th>Seasonal</th><th>On menu</th><th></th></tr></thead><tbody id="flavor-rows"></tbody></table>
+    <table class="cards"><thead><tr><th>Flavor</th><th>GF</th><th>Seasonal</th><th>On menu</th><th></th></tr></thead><tbody id="flavor-rows"></tbody></table>
   </section>
 
   <section data-panel="stops" style="padding:0" hidden>
@@ -101,7 +207,7 @@
       </div>
     </div>
     <p class="muted">These show on the Find a Slice page and as meet-up spots on the order form. Uncheck <b>Showing</b> to hide one.</p>
-    <table><thead><tr><th>Shop</th><th>Town</th><th>Day</th><th class="hide-sm">Route</th><th>Showing</th><th></th></tr></thead><tbody id="stop-rows"></tbody></table>
+    <table class="cards"><thead><tr><th>Shop</th><th>Town</th><th>Day</th><th class="hide-sm">Route</th><th>Showing</th><th></th></tr></thead><tbody id="stop-rows"></tbody></table>
   </section>
 
   <section data-panel="settings" style="padding:0" hidden>
@@ -131,7 +237,7 @@
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const money = (c) => '$' + (c / 100).toFixed(2);
+  const money = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const day = (iso) => iso ? new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' }) : '';
   const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -150,13 +256,15 @@
     document.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
     document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
     $('range-bar').hidden = !(tab === 'orders' || tab === 'sheet');
+    if (tab === 'wholesale') wsLoad();
     if (tab === 'flavors') loadFlavors();
     if (tab === 'stops') loadStops();
     if (tab === 'settings') loadSettings();
   }));
 
   // ---------- orders ----------
-  let overview, orders = [];
+  let overview, orders = [], wsForSheet = [];
+  function flash(msg) { let f = document.getElementById('flash'); if (!f) { f = document.createElement('div'); f.id = 'flash'; f.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#33043a;color:#fff;padding:.6em 1.2em;border-radius:99px;font-weight:600;z-index:99;transition:opacity .3s'; document.body.appendChild(f); } f.textContent = msg; f.style.opacity = 1; clearTimeout(f._t); f._t = setTimeout(() => (f.style.opacity = 0), 1200); }
   async function loadOverview() {
     overview = await api('/overview');
     const c = overview.cycle;
@@ -174,6 +282,7 @@
     const st = $('status-filter').value;
     const data = await api(`/orders?from=${from}&to=${to}&status=${st === 'open' ? 'all' : st}`);
     orders = st === 'open' ? data.orders.filter((o) => o.status !== 'done' && o.status !== 'cancelled') : data.orders;
+    wsForSheet = (await api(`/wholesale/invoices?from=${from}&to=${to}`)).invoices;
     renderOrders(); renderSheet();
     const newN = data.orders.filter((o) => o.status === 'new').length;
     $('new-count').textContent = newN; $('new-count').hidden = !newN;
@@ -215,7 +324,7 @@
 
   function renderSheet() {
     const live = orders.filter((o) => o.status !== 'cancelled');
-    if (!live.length) { $('sheet').innerHTML = '<div class="empty-state"><p>No orders in this range.</p></div>'; return; }
+    if (!live.length && !wsForSheet.length) { $('sheet').innerHTML = '<div class="empty-state"><p>No orders in this range.</p></div>'; return; }
     const wholes = {}, minis = {};
     for (const o of live) for (const i of o.items) {
       for (const [name, n] of Object.entries(i.counts || {})) {
@@ -223,7 +332,10 @@
         else minis[name] = (minis[name] || 0) + n * i.qty;
       }
     }
-    const tbl = (obj, unit) => Object.keys(obj).length ? `<table><thead><tr><th>Flavor</th><th>${unit}</th></tr></thead><tbody>${Object.entries(obj).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => `<tr><td>${esc(k)}</td><td><b>${v}</b></td></tr>`).join('')}</tbody></table>` : '<p class="muted">None</p>';
+    for (const inv of wsForSheet) for (const l of inv.lines) {
+      if (l.kind === 'whole') wholes[l.flavor] = (wholes[l.flavor] || 0) + l.qty; else minis[l.flavor] = (minis[l.flavor] || 0) + l.qty;
+    }
+    const tbl = (obj, unit) => Object.keys(obj).length ? `<table class="cards"><thead><tr><th>Flavor</th><th>${unit}</th></tr></thead><tbody>${Object.entries(obj).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => `<tr><td>${esc(k)}</td><td><b>${v}</b></td></tr>`).join('')}</tbody></table>` : '<p class="muted">None</p>';
     // Route sheet grouped by date, then stop
     const groups = {};
     for (const o of live) {
@@ -234,7 +346,8 @@
       const [d, place] = k.split('|');
       return `<h3>${day(d)} · ${esc(place)}</h3><table><tbody>${groups[k].map((o) => `<tr><td style="width:28%"><b>${esc(o.name)}</b><br><span class="muted">${esc(o.phone)}</span></td><td>${o.items.map((i) => `${i.qty} × ${esc(i.label)}: ${esc(i.detail)}`).join('<br>')}${o.ship_address ? `<br><span class="muted">${esc(o.ship_address)}</span>` : ''}</td><td style="width:12%">${money(o.total_cents)}</td></tr>`).join('')}</tbody></table>`;
     }).join('');
-    $('sheet').innerHTML = `<div class="grid2" style="margin-top:1rem"><div><h3>Whole cheesecakes to bake</h3>${tbl(wholes, 'Wholes')}</div><div><h3>Minis to bake</h3>${tbl(minis, 'Minis')}</div></div><h2 style="margin-top:2rem;font-size:1.6rem">Delivery &amp; pickup sheet</h2>${route}`;
+    const wsRoute = wsForSheet.length ? `<h2 style="margin-top:2rem;font-size:1.6rem">Wholesale deliveries</h2><table><tbody>${wsForSheet.slice().sort((a, b) => a.invoice_date.localeCompare(b.invoice_date) || a.customer.localeCompare(b.customer)).map((i) => `<tr><td style="width:28%"><b>${esc(i.customer)}</b><br><span class="muted">${day(i.invoice_date)}</span></td><td>${i.lines.map((l) => `${l.qty} ${l.kind === 'whole' ? 'whole' : 'mini'} ${esc(l.flavor)}`).join(', ')}</td><td style="width:12%">${money(i.total_cents)}</td></tr>`).join('')}</tbody></table>` : '';
+    $('sheet').innerHTML = `<p class="muted" style="margin-top:1rem">Includes website orders${wsForSheet.length ? ' and wholesale invoices' : ''} in this range.</p><div class="grid2" style="margin-top:.5rem"><div><h3>Whole cheesecakes to bake</h3>${tbl(wholes, 'Wholes')}</div><div><h3>Minis to bake</h3>${tbl(minis, 'Minis')}</div></div>${route ? `<h2 style="margin-top:2rem;font-size:1.6rem">Website orders: delivery &amp; pickup</h2>${route}` : ''}${wsRoute}`;
   }
   $('range').addEventListener('change', loadOrders);
   $('status-filter').addEventListener('change', loadOrders);
@@ -244,13 +357,13 @@
     const { flavors } = await api('/flavors');
     $('flavor-rows').innerHTML = flavors.map((f) => `<tr data-id="${f.id}">
       <td><input type="text" value="${esc(f.name)}" data-k="name" aria-label="Flavor name"></td>
-      <td><input type="checkbox" data-k="gf" ${f.gf ? 'checked' : ''} aria-label="Gluten friendly"></td>
-      <td><input type="checkbox" data-k="seasonal" ${f.seasonal ? 'checked' : ''} aria-label="Seasonal"></td>
-      <td><input type="checkbox" data-k="active" ${f.active ? 'checked' : ''} aria-label="On menu"></td>
+      <td data-l="Gluten friendly"><input type="checkbox" data-k="gf" ${f.gf ? 'checked' : ''} aria-label="Gluten friendly"></td>
+      <td data-l="Seasonal tag"><input type="checkbox" data-k="seasonal" ${f.seasonal ? 'checked' : ''} aria-label="Seasonal"></td>
+      <td data-l="On the menu"><input type="checkbox" data-k="active" ${f.active ? 'checked' : ''} aria-label="On menu"></td>
       <td><button class="del" data-delf>Delete</button></td></tr>`).join('');
     $('flavor-rows').querySelectorAll('input').forEach((inp) => inp.addEventListener('change', () => {
       const id = inp.closest('tr').dataset.id;
-      api('/flavors/' + id, { method: 'PATCH', body: { [inp.dataset.k]: inp.type === 'checkbox' ? inp.checked : inp.value } });
+      api('/flavors/' + id, { method: 'PATCH', body: { [inp.dataset.k]: inp.type === 'checkbox' ? inp.checked : inp.value } }).then(() => flash('Saved'));
     }));
     $('flavor-rows').querySelectorAll('[data-delf]').forEach((b) => b.addEventListener('click', async () => {
       const tr = b.closest('tr');
@@ -269,10 +382,10 @@
     const { stops } = await api('/stops');
     $('stop-rows').innerHTML = stops.map((s) => `<tr data-id="${s.id}">
       <td><input type="text" value="${esc(s.name)}" data-k="name" aria-label="Shop name"></td>
-      <td><input type="text" value="${esc(s.town)}" data-k="town" aria-label="Town"></td>
-      <td><select data-k="day" aria-label="Day"><option ${s.day === 'Tuesday' ? 'selected' : ''}>Tuesday</option><option ${s.day === 'Wednesday' ? 'selected' : ''}>Wednesday</option></select></td>
+      <td data-l="Town"><input type="text" value="${esc(s.town)}" data-k="town" aria-label="Town"></td>
+      <td data-l="Delivery day"><select data-k="day" aria-label="Day"><option ${s.day === 'Tuesday' ? 'selected' : ''}>Tuesday</option><option ${s.day === 'Wednesday' ? 'selected' : ''}>Wednesday</option></select></td>
       <td class="hide-sm"><select data-k="route" aria-label="Route">${[1, 2, 3, 4].map((n) => `<option value="${n}" ${s.route === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
-      <td><input type="checkbox" data-k="active" ${s.active ? 'checked' : ''} aria-label="Showing"></td>
+      <td data-l="Showing on site"><input type="checkbox" data-k="active" ${s.active ? 'checked' : ''} aria-label="Showing"></td>
       <td><button class="del" data-dels>Delete</button></td></tr>`).join('');
     $('stop-rows').querySelectorAll('input,select').forEach((inp) => inp.addEventListener('change', () => {
       const id = inp.closest('tr').dataset.id;
@@ -304,6 +417,162 @@
     for (const [id, k] of Object.entries(priceFields)) body[k] = $(id).value.replace(/[$,\s]/g, '');
     try { await api('/settings', { method: 'PUT', body }); $('set-ok').hidden = false; }
     catch (e) { $('set-err').textContent = e.message; $('set-err').hidden = false; }
+  });
+
+
+  // ---------- wholesale ----------
+  let wsWeek = null, wsCustomers = [], wsFlavors = [], wsInvoices = [], editing = null;
+  const todayISO = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  const mondayOf = (iso) => { const d = new Date(iso + 'T12:00:00Z'); return addDays(iso, -((d.getUTCDay() + 6) % 7)); };
+  document.querySelectorAll('[data-ws]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-ws]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    document.querySelectorAll('[data-wsp]').forEach((p) => (p.hidden = p.dataset.wsp !== b.dataset.ws));
+    if (b.dataset.ws === 'totals') wsReport();
+    if (b.dataset.ws === 'shops') wsShops();
+  }));
+  async function wsLoad() {
+    if (!wsWeek) { wsWeek = mondayOf(todayISO()); $('ws-date').value = todayISO(); }
+    const [c, f] = await Promise.all([api('/wholesale/customers'), api('/flavors')]);
+    wsCustomers = c.customers; wsFlavors = f.flavors.filter((x) => x.active).map((x) => x.name);
+    $('ws-demo-note').hidden = !wsCustomers.some((x) => x.demo);
+    wsList();
+  }
+  function wsMsg(ok, err) { $('ws-ok').textContent = ok || ''; $('ws-ok').hidden = !ok; $('ws-err').textContent = err || ''; $('ws-err').hidden = !err; }
+  async function wsList() {
+    $('ws-week-label').textContent = `Week of ${day(wsWeek)}`;
+    wsInvoices = (await api('/wholesale/invoices?week=' + wsWeek)).invoices;
+    const sum = wsInvoices.reduce((t, i) => t + i.total_cents, 0);
+    const minis = wsInvoices.reduce((t, i) => t + i.lines.filter((l) => l.kind !== 'whole').reduce((a, l) => a + l.qty, 0), 0);
+    $('ws-week-sum').textContent = wsInvoices.length ? `${wsInvoices.length} invoices · ${money(sum)} · ${minis} minis` : '';
+    if (!wsInvoices.length) { $('ws-list').innerHTML = `<div class="empty-state"><h3>No invoices this week yet</h3><p>Tap <b>Repeat last week's invoices</b> to copy your standing orders, or add a new one.</p></div>`; return; }
+    $('ws-list').innerHTML = wsInvoices.map((i) => `
+      <div class="card ${i.status === 'draft' ? 'new' : ''}">
+        <div class="head">
+          <div><span class="code">#${i.number}</span> <span class="pill-status">${esc(i.status)}</span><h3>${esc(i.customer)}</h3><div class="meta">${day(i.invoice_date)}${i.town ? ' · ' + esc(i.town) : ''}</div></div>
+          <b style="font-size:1.25rem;color:var(--plum)">${money(i.total_cents)}</b>
+        </div>
+        <ul>${i.lines.map((l) => `<li>${l.qty} ${l.kind === 'whole' ? 'whole' : 'mini'} <b>${esc(l.flavor)}</b> @ ${money(l.unit_cents)}</li>`).join('')}</ul>
+        <div class="actions">
+          <select data-wstatus="${i.id}" aria-label="Status">${['draft', 'sent', 'paid'].map((s) => `<option value="${s}" ${s === i.status ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}</select>
+          <button class="pill" data-wedit="${i.id}">Edit</button>
+          <a class="pill" href="/admin/invoice/${i.id}" target="_blank" style="text-decoration:none;color:inherit">Print / PDF</a>
+          <button class="pill" data-wmail="${i.id}">Email</button>
+          <button class="del" data-wdel="${i.id}">Delete</button>
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('[data-wstatus]').forEach((s) => s.addEventListener('change', async () => { await api('/wholesale/invoices/' + s.dataset.wstatus, { method: 'PATCH', body: { status: s.value } }); flash('Saved'); wsList(); }));
+    document.querySelectorAll('[data-wedit]').forEach((b) => b.addEventListener('click', () => openInvoice(wsInvoices.find((i) => i.id === Number(b.dataset.wedit)))));
+    document.querySelectorAll('[data-wdel]').forEach((b) => b.addEventListener('click', async () => {
+      const i = wsInvoices.find((x) => x.id === Number(b.dataset.wdel));
+      if (!confirm(`Delete invoice #${i.number} for ${i.customer}? This can't be undone.`)) return;
+      await api('/wholesale/invoices/' + i.id, { method: 'DELETE' }); wsList();
+    }));
+    document.querySelectorAll('[data-wmail]').forEach((b) => b.addEventListener('click', async () => {
+      try { await api(`/wholesale/invoices/${b.dataset.wmail}/email`, { method: 'POST' }); wsMsg('Invoice emailed.'); wsList(); } catch (e) { wsMsg('', e.message); }
+    }));
+  }
+  $('ws-prev').addEventListener('click', () => { wsWeek = addDays(wsWeek, -7); wsMsg(); wsList(); });
+  $('ws-next').addEventListener('click', () => { wsWeek = addDays(wsWeek, 7); wsMsg(); wsList(); });
+  $('ws-repeat').addEventListener('click', async () => {
+    const r = await api('/wholesale/repeat', { method: 'POST', body: { week: wsWeek } });
+    wsMsg(r.made ? `Copied ${r.made} invoice${r.made === 1 ? '' : 's'} from the week of ${day(r.from_week)} as drafts.${r.skipped ? ` Skipped ${r.skipped} shop${r.skipped === 1 ? '' : 's'} already invoiced this week.` : ''} Check them over, then mark them sent.` : `Nothing to copy from the week of ${day(r.from_week)}${r.skipped ? ' (every shop is already invoiced this week)' : ''}.`);
+    wsList();
+  });
+  $('ws-clear').addEventListener('click', async () => {
+    if (!confirm('Remove all sample shops and sample invoices?')) return;
+    await api('/wholesale/clear-demo', { method: 'POST' }); wsLoad();
+  });
+
+  // invoice editor
+  function lineRow(l = {}) {
+    const div = document.createElement('div'); div.className = 'line';
+    const opts = [...new Set([...(l.flavor ? [l.flavor] : []), ...wsFlavors])];
+    div.innerHTML = `<select class="fl" aria-label="Flavor">${opts.map((f) => `<option ${f === l.flavor ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>
+      <select class="kd" aria-label="Mini or whole"><option value="mini">Mini</option><option value="whole" ${l.kind === 'whole' ? 'selected' : ''}>Whole</option></select>
+      <input class="qt" type="number" min="1" inputmode="numeric" value="${l.qty || 6}" aria-label="Quantity">
+      <input class="pr" inputmode="decimal" value="${((l.unit_cents != null ? l.unit_cents : defaultPrice(l.kind)) / 100).toFixed(2)}" aria-label="Price each">
+      <button type="button" class="x" aria-label="Remove line">×</button>`;
+    div.querySelector('.x').addEventListener('click', () => { div.remove(); invTotal(); });
+    div.querySelector('.kd').addEventListener('change', (e) => { div.querySelector('.pr').value = (defaultPrice(e.target.value) / 100).toFixed(2); invTotal(); });
+    div.querySelectorAll('input').forEach((i) => i.addEventListener('input', invTotal));
+    $('inv-lines').appendChild(div);
+  }
+  function currentCustomer() { return wsCustomers.find((c) => c.id === Number($('inv-cust').value)); }
+  function defaultPrice(kind) { const c = currentCustomer(); return c ? (kind === 'whole' ? c.price_whole_cents : c.price_mini_cents) : 0; }
+  function readLines() { return [...$('inv-lines').children].map((d) => ({ flavor: d.querySelector('.fl').value, kind: d.querySelector('.kd').value, qty: d.querySelector('.qt').value, unit: d.querySelector('.pr').value.replace(/[$,]/g, '') })); }
+  function invTotal() { $('inv-total').textContent = money(readLines().reduce((t, l) => t + (Number(l.qty) || 0) * Math.round((Number(l.unit) || 0) * 100), 0)); }
+  function openInvoice(inv) {
+    editing = inv || null;
+    $('inv-title').textContent = inv ? `Edit invoice #${inv.number}` : 'New invoice';
+    $('inv-cust').innerHTML = wsCustomers.filter((c) => c.active || (inv && c.id === inv.customer_id)).map((c) => `<option value="${c.id}" ${inv && c.id === inv.customer_id ? 'selected' : ''}>${esc(c.name)}${c.town ? ' (' + esc(c.town) + ')' : ''}</option>`).join('');
+    if (!wsCustomers.length) return alert('Add a shop first under Wholesale > Shops.');
+    $('inv-date').value = inv ? inv.invoice_date : addDays(wsWeek, 1);
+    $('inv-notes').value = inv ? inv.notes || '' : '';
+    $('inv-lines').innerHTML = '';
+    (inv ? inv.lines : [{}]).forEach(lineRow);
+    $('inv-err').hidden = true; invTotal();
+    $('inv-dlg').showModal();
+  }
+  $('ws-new').addEventListener('click', () => openInvoice(null));
+  $('inv-addline').addEventListener('click', () => { lineRow({}); invTotal(); });
+  $('inv-cancel').addEventListener('click', () => $('inv-dlg').close());
+  $('inv-save').addEventListener('click', async () => {
+    const body = { customer_id: $('inv-cust').value, invoice_date: $('inv-date').value, notes: $('inv-notes').value, lines: readLines() };
+    try {
+      await api('/wholesale/invoices' + (editing ? '/' + editing.id : ''), { method: editing ? 'PUT' : 'POST', body });
+      $('inv-dlg').close(); flash('Invoice saved');
+      wsWeek = mondayOf(body.invoice_date); wsList();
+    } catch (e) { $('inv-err').textContent = e.message; $('inv-err').hidden = false; }
+  });
+
+  // totals
+  async function wsReport() {
+    const r = await api(`/wholesale/report?period=${$('ws-period').value}&date=${$('ws-date').value || todayISO()}`);
+    const flav = Object.entries(r.flavors).sort((a, b) => (b[1].minis + b[1].wholes) - (a[1].minis + a[1].wholes));
+    const shops = Object.entries(r.shops).sort((a, b) => b[1] - a[1]);
+    $('ws-report').innerHTML = `
+      <p class="muted">${day(r.from)} to ${day(r.to)}</p>
+      <div class="stats4">
+        <div><b>${money(r.total_cents)}</b><span>Total invoiced (${r.invoices} invoices)</span></div>
+        <div><b>${money(r.paid_cents)}</b><span>Paid</span></div>
+        <div><b>${money(r.unpaid_cents)}</b><span>Not paid yet</span></div>
+        <div><b>${r.minis.toLocaleString()}${r.wholes ? ' + ' + r.wholes : ''}</b><span>Minis${r.wholes ? ' + wholes' : ''} sold</span></div>
+      </div>
+      <div class="grid2">
+        <div><h3>Quantity by flavor</h3>${flav.length ? `<table><thead><tr><th>Flavor</th><th>Minis</th><th>Wholes</th></tr></thead><tbody>${flav.map(([k, v]) => `<tr><td>${esc(k)}</td><td><b>${v.minis}</b></td><td>${v.wholes || ''}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No invoices in this period.</p>'}</div>
+        <div><h3>By shop</h3>${shops.length ? `<table><thead><tr><th>Shop</th><th>Total</th></tr></thead><tbody>${shops.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${money(v)}</td></tr>`).join('')}</tbody></table>` : ''}</div>
+      </div>`;
+  }
+  $('ws-period').addEventListener('change', wsReport);
+  $('ws-date').addEventListener('change', wsReport);
+
+  // shops
+  async function wsShops() {
+    wsCustomers = (await api('/wholesale/customers')).customers;
+    $('wc-list').innerHTML = `<table class="cards"><thead><tr><th>Shop</th><th>Town</th><th>Email</th><th>$/mini</th><th>$/whole</th><th>Active</th><th></th></tr></thead><tbody>${wsCustomers.map((c) => `<tr data-id="${c.id}">
+      <td><input type="text" data-k="name" value="${esc(c.name)}" aria-label="Shop name"></td>
+      <td data-l="Town"><input type="text" data-k="town" value="${esc(c.town || '')}" aria-label="Town"></td>
+      <td data-l="Email"><input type="text" data-k="email" value="${esc(c.email || '')}" aria-label="Email"></td>
+      <td data-l="$ per mini"><input type="text" data-k="price_mini" value="${(c.price_mini_cents / 100).toFixed(2)}" inputmode="decimal" style="width:90px" aria-label="Price per mini"></td>
+      <td data-l="$ per whole"><input type="text" data-k="price_whole" value="${(c.price_whole_cents / 100).toFixed(2)}" inputmode="decimal" style="width:90px" aria-label="Price per whole"></td>
+      <td data-l="Active"><input type="checkbox" data-k="active" ${c.active ? 'checked' : ''} aria-label="Active"></td>
+      <td><button class="del" data-wcdel>Delete</button></td></tr>`).join('')}</tbody></table>`;
+    $('wc-list').querySelectorAll('input').forEach((inp) => inp.addEventListener('change', async () => {
+      const id = inp.closest('tr').dataset.id;
+      await api('/wholesale/customers/' + id, { method: 'PATCH', body: { [inp.dataset.k]: inp.type === 'checkbox' ? inp.checked : inp.value.replace(/[$,]/g, '') } });
+      flash('Saved');
+    }));
+    $('wc-list').querySelectorAll('[data-wcdel]').forEach((b) => b.addEventListener('click', async () => {
+      const tr = b.closest('tr');
+      if (!confirm(`Delete ${tr.querySelector('[data-k=name]').value} and all of its invoices?`)) return;
+      await api('/wholesale/customers/' + tr.dataset.id, { method: 'DELETE' }); wsShops();
+    }));
+  }
+  $('wc-add').addEventListener('click', async () => {
+    if (!$('wc-name').value.trim()) return alert('Enter the shop name.');
+    await api('/wholesale/customers', { method: 'POST', body: { name: $('wc-name').value, town: $('wc-town').value, email: $('wc-email').value, price_mini: $('wc-mini').value.replace(/[$,]/g, ''), price_whole: $('wc-whole').value.replace(/[$,]/g, '') } });
+    ['wc-name', 'wc-town', 'wc-email', 'wc-mini', 'wc-whole'].forEach((id) => ($(id).value = ''));
+    wsShops();
   });
 
   loadOverview().then(loadOrders);

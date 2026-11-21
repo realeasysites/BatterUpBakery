@@ -1,6 +1,6 @@
 // Shared site script: mobile menu, live flavors/prices/dates from the dashboard.
 (function () {
-  const money = (c) => '$' + (c / 100).toFixed(2);
+  const money = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   // "2026-12-02" -> "Tue, Dec 2"
   const short = (iso) => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });

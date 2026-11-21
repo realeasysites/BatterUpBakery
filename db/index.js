@@ -52,6 +52,32 @@ CREATE TABLE IF NOT EXISTS orders (
   status TEXT NOT NULL DEFAULT 'new'    -- new | confirmed | ready | done | cancelled
 );
 CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(fulfill_date);
+
+-- Wholesale: shops that buy for resale, and the weekly invoices sent to them.
+CREATE TABLE IF NOT EXISTS ws_customers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  town TEXT,
+  email TEXT,
+  price_mini_cents INTEGER NOT NULL DEFAULT 0,
+  price_whole_cents INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
+  active INTEGER NOT NULL DEFAULT 1,
+  demo INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS ws_invoices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  number INTEGER NOT NULL,
+  customer_id INTEGER NOT NULL REFERENCES ws_customers(id) ON DELETE CASCADE,
+  invoice_date TEXT NOT NULL,            -- YYYY-MM-DD
+  lines_json TEXT NOT NULL,              -- [{flavor, kind: mini|whole, qty, unit_cents}]
+  total_cents INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'draft',  -- draft | sent | paid
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  demo INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_ws_inv_date ON ws_invoices(invoice_date);
 `);
 
 const DEFAULT_SETTINGS = {
@@ -119,6 +145,31 @@ const SEED_STOPS = [
 if (db.prepare('SELECT COUNT(*) n FROM stops').get().n === 0) {
   const ins = db.prepare('INSERT INTO stops (name, town, day, route, sort) VALUES (?, ?, ?, ?, ?)');
   db.transaction(() => SEED_STOPS.forEach(([n, t, d, r], i) => ins.run(n, t, d, r, i)))();
+}
+
+// Sample wholesale data so the owner can try invoicing before entering her real shops.
+// Prices are placeholders. "Clear sample data" in the dashboard removes all of it.
+if (db.prepare('SELECT COUNT(*) n FROM ws_customers').get().n === 0 && !db.prepare("SELECT value FROM settings WHERE key='ws_demo_seeded'").get()) {
+  const shops = db.prepare('SELECT name, town FROM stops ORDER BY sort LIMIT 10').all();
+  const flavors = db.prepare('SELECT name FROM flavors WHERE active = 1 ORDER BY sort').all().map((f) => f.name);
+  const insC = db.prepare('INSERT INTO ws_customers (name, town, price_mini_cents, price_whole_cents, demo) VALUES (?, ?, 350, 4500, 1)');
+  const insI = db.prepare('INSERT INTO ws_invoices (number, customer_id, invoice_date, lines_json, total_cents, status, demo) VALUES (?, ?, ?, ?, ?, ?, 1)');
+  const today = new Date();
+  const monday = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - ((today.getUTCDay() + 6) % 7), 12));
+  db.transaction(() => {
+    let num = 1001;
+    shops.forEach((s, i) => {
+      const cid = insC.run(s.name, s.town).lastInsertRowid;
+      // Three past weeks of standing orders for the first 8 shops.
+      if (i < 8) for (let w = 3; w >= 1; w--) {
+        const d = new Date(monday); d.setUTCDate(d.getUTCDate() - 7 * w + 1 + (i % 2)); // Tue or Wed
+        const lines = [0, 1, 2].map((k) => ({ flavor: flavors[(i * 3 + k) % flavors.length], kind: 'mini', qty: 6 + ((i + k) % 3) * 3, unit_cents: 350 }));
+        const total = lines.reduce((t, l) => t + l.qty * l.unit_cents, 0);
+        insI.run(num++, cid, d.toISOString().slice(0, 10), JSON.stringify(lines), total, w > 1 ? 'paid' : 'sent');
+      }
+    });
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('ws_demo_seeded', '1')").run();
+  })();
 }
 
 function getSettings() {

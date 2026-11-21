@@ -1,5 +1,6 @@
 /* Batter Up Bakery — Workbench layout, themed from the logo:
    plum batter, lime bowl, baseball stitching ring. */
+[hidden] { display: none !important; }
 :root {
   --plum: #56085c;
   --plum-deep: #33043a;
@@ -262,6 +263,17 @@ label { font-weight: 600; font-size: .92rem; display: block; margin-bottom: .35r
   body.has-bar { padding-bottom: 70px; }
 }
 @media (max-width: 560px) {
+  /* Order form on phones: one long list (no box-in-a-box scrolling), bigger tap targets,
+     and the pack counter and Add button stay in view while scrolling. */
+  .flavor-pick { max-height: none; overflow: visible; grid-template-columns: 1fr; gap: .45rem; }
+  .fp { min-height: 52px; font-size: 1rem; padding: .5rem .6rem .5rem .9rem; }
+  .fp button { width: 40px; height: 40px; font-size: 1.3rem; }
+  .fp output { min-width: 1.6em; font-size: 1.1rem; }
+  .progress { position: sticky; top: 72px; z-index: 5; background: #fff; padding: .6rem 0; margin: 0 0 .4rem; box-shadow: 0 6px 10px -8px rgba(0,0,0,.2); }
+  .pack-opt { padding: .75rem; }
+  .add-row { position: sticky; bottom: 0; background: #fff; padding: .7rem 0; z-index: 5; box-shadow: 0 -6px 10px -8px rgba(0,0,0,.2); }
+  .add-row .qty { width: 90px; }
+  .add-row .btn { flex: 1; justify-content: center; }
   .flavor-photos { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   body { font-size: 16px; }
   .brand img { width: 58px; height: 58px; }
@@ -275,3 +287,4 @@ label { font-weight: 600; font-size: .92rem; display: block; margin-bottom: .35r
   .fb-frame iframe { height: 520px; }
   .search-row { flex-direction: column; }
 }
+body:not(.has-bar) .mobile-bar { display: none !important; }
