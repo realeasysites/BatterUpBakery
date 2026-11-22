@@ -110,7 +110,7 @@ section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
 .flavor-photos.collapsed .fcard:nth-child(n+13) { display: none; }
 .show-all-wrap { margin: -.4rem 0 1.6rem; }
 .fcard:hover { transform: translateY(-3px); }
-.fcard img { width: 100%; aspect-ratio: 3 / 4; height: auto; object-fit: cover; object-position: center 40%; }
+.fcard img { width: 100%; aspect-ratio: 900 / 1169; height: auto; object-fit: cover; }
 .fcard figcaption { padding: .6rem .8rem .7rem; font-weight: 700; font-size: .95rem; display: flex; align-items: center; gap: .4em; flex-wrap: wrap; }
 .more-flavors { font-size: 1.1rem; margin: .4rem 0 .8rem; }
 .chip { display: inline-flex; align-items: center; gap: .45em; padding: .5em .95em; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); font-weight: 600; font-size: .95rem; }
