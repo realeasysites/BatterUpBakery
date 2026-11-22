@@ -17,6 +17,37 @@
   }
   document.querySelectorAll('[data-year]').forEach((el) => (el.textContent = new Date().getFullYear()));
 
+  // Traffic: remember where this visit came from (Facebook, Google, a QR code...) for the
+  // whole visit, log each page view, and count taps on call / text / Messenger / Facebook.
+  // Visit any page with #notrack once on a phone to stop counting yourself.
+  try {
+    if (location.hash === '#notrack') localStorage.setItem('bub-notrack', '1');
+    if (location.hash === '#track') localStorage.removeItem('bub-notrack');
+  } catch (e) {}
+  const tracking = (() => { try { return !localStorage.getItem('bub-notrack'); } catch (e) { return true; } })();
+  let visit = null;
+  try { visit = JSON.parse(sessionStorage.getItem('bub-visit') || 'null'); } catch (e) {}
+  const landing = !visit;
+  if (!visit) {
+    const q = new URLSearchParams(location.search);
+    visit = { utm: q.get('utm_source') || q.get('src') || '', campaign: q.get('utm_campaign') || '', fbclid: q.get('fbclid') ? 1 : 0, gclid: q.get('gclid') ? 1 : 0, ref: document.referrer || '' };
+    try { sessionStorage.setItem('bub-visit', JSON.stringify(visit)); } catch (e) {}
+  }
+  const send = (data) => {
+    if (!tracking) return;
+    const body = JSON.stringify(Object.assign({}, visit, data));
+    if (navigator.sendBeacon) navigator.sendBeacon('/api/t', new Blob([body], { type: 'application/json' }));
+    else fetch('/api/t', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  };
+  window.BUB_VISIT = visit;
+  send({ type: 'view', path: location.pathname, landing: landing ? 1 : 0 });
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a'); if (!a) return;
+    const h = a.getAttribute('href') || '';
+    const type = h.startsWith('tel:') ? 'call' : h.startsWith('sms:') ? 'text' : h.startsWith('mailto:') ? 'email' : /m\.me\/|messenger\.com/.test(h) ? 'messenger' : /facebook\.com/.test(h) ? 'facebook' : /^\/order/.test(h) ? 'order_start' : '';
+    if (type) send({ type });
+  });
+
   const menu = fetch('/api/menu').then((r) => r.json());
   const stops = fetch('/api/stops').then((r) => r.json());
   window.BUB = { money, esc, menu, stops, short };

@@ -233,6 +233,7 @@
     const btn = $('place');
     btn.disabled = true; btn.dataset.busy = '1'; btn.textContent = body.pay === 'card' ? 'Opening secure checkout…' : 'Placing order…';
     try {
+      body.visit = window.BUB_VISIT || null;
       const r = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Something went wrong.');

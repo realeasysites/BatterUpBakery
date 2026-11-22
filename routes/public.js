@@ -5,6 +5,7 @@ const { currentCycle } = require('../lib/schedule');
 const { productsWithPrices, priceItems, OrderError, clean, newCode } = require('../lib/orders');
 const { sendOrderEmails } = require('../lib/mailer');
 const square = require('../lib/square');
+const { classify: classifySource } = require('./traffic');
 
 const router = express.Router();
 
@@ -108,9 +109,11 @@ router.post('/orders', async (req, res) => {
     // Card payment now (Square) for pickup/route orders; shipping is paid later once the fee is known.
     const payCard = b.pay === 'card' && square.enabled() && fulfillment !== 'ship';
     const code = newCode();
-    db.prepare(`INSERT INTO orders (code, name, phone, email, fulfillment, fulfill_date, stop_id, stop_label, ship_address, items_json, total_cents, notes, pay_method)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-      .run(code, name, phone, email || null, fulfillment, fulfill_date, stop_id, stop_label, ship_address, JSON.stringify(items), total_cents, notes || null, payCard ? 'card' : 'later');
+    const host = (req.get('host') || '').replace(/^www\./, '').split(':')[0];
+    const source = b.visit && typeof b.visit === 'object' ? classifySource(b.visit, host) : 'Direct / typed in';
+    db.prepare(`INSERT INTO orders (code, name, phone, email, fulfillment, fulfill_date, stop_id, stop_label, ship_address, items_json, total_cents, notes, pay_method, source)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(code, name, phone, email || null, fulfillment, fulfill_date, stop_id, stop_label, ship_address, JSON.stringify(items), total_cents, notes || null, payCard ? 'card' : 'later', source);
 
     recordOrder(req.ip);
     const order = { code, name, phone, email, notes, fulfillment, fulfillment_label, items, total_cents, pay_method: payCard ? 'card' : 'later' };

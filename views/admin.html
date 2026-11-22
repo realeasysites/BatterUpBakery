@@ -95,6 +95,7 @@
     <button role="tab" data-tab="orders" aria-selected="true">Orders <span class="count" id="new-count" hidden></span></button>
     <button role="tab" data-tab="sheet" aria-selected="false">Bake &amp; route sheet</button>
     <button role="tab" data-tab="wholesale" aria-selected="false" hidden>Wholesale</button>
+    <button role="tab" data-tab="traffic" aria-selected="false">Traffic</button>
     <button role="tab" data-tab="giveaway" aria-selected="false">Giveaway</button>
     <button role="tab" data-tab="flavors" aria-selected="false">Flavors</button>
     <button role="tab" data-tab="stops" aria-selected="false">Shops &amp; route</button>
@@ -213,6 +214,19 @@
     </form>
   </dialog>
 
+  <section data-panel="traffic" style="padding:0" hidden>
+    <div class="bar">
+      <select id="tr-days" style="width:auto"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last year</option></select>
+    </div>
+    <div id="tr-body"><p class="muted">Loading…</p></div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Know exactly where clicks come from</h3>
+      <p class="meta">Facebook and Google are detected on their own. To track a specific post, flyer or QR code, add a tag to the end of the link:</p>
+      <ul class="meta" id="tr-links" style="overflow-wrap:anywhere"></ul>
+      <p class="meta">On your own phone, open the site once with <b>#notrack</b> at the end so your visits aren't counted.</p>
+    </div>
+  </section>
+
   <section data-panel="giveaway" style="padding:0" hidden>
     <div class="card">
       <h3>The Great Cheesecake Hunt</h3>
@@ -328,6 +342,7 @@
     document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
     $('range-bar').hidden = !(tab === 'orders' || tab === 'sheet');
     if (tab === 'wholesale') wsLoad();
+    if (tab === 'traffic') trLoad();
     if (tab === 'giveaway') huntLoad();
     if (tab === 'flavors') loadFlavors();
     if (tab === 'stops') loadStops();
@@ -381,6 +396,7 @@
           <div style="text-align:right"><b style="font-size:1.25rem;color:var(--plum)">${money(o.total_cents)}</b><div class="meta">Placed ${esc(new Date(o.created_at.replace(' ', 'T') + 'Z').toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }))}</div></div>
         </div>
         <p style="margin:.6rem 0 0">${where(o)}</p>
+        ${o.source ? `<p class="meta" style="margin:.2rem 0 0">Came from: <b>${esc(o.source)}</b></p>` : ''}
         <ul>${o.items.map((i) => `<li>${i.qty} × <b>${esc(i.label)}</b>: ${esc(i.detail)}</li>`).join('')}</ul>
         ${o.notes ? `<p class="meta"><b>Notes:</b> ${esc(o.notes)}</p>` : ''}
         <div class="actions">
@@ -742,6 +758,33 @@
     wsShops();
   });
 
+
+  // ---------- traffic ----------
+  async function trLoad() {
+    const r = await api('/traffic?days=' + $('tr-days').value);
+    const taps = (r.taps.call || 0) + (r.taps.text || 0) + (r.taps.messenger || 0);
+    const max = Math.max(1, ...r.daily.map((d) => d.n));
+    const bars = r.daily.length ? `<div style="display:flex;align-items:flex-end;gap:2px;height:90px;margin:.4rem 0 1.2rem">${r.daily.map((d) => `<div title="${day(d.day)}: ${d.n} visitors" style="flex:1;background:var(--plum);opacity:.85;border-radius:3px 3px 0 0;height:${Math.max(4, Math.round(d.n / max * 100))}%"></div>`).join('')}</div>` : '';
+    $('tr-body').innerHTML = `
+      <div class="stats4">
+        <div><b>${r.visitors.toLocaleString()}</b><span>Visitors</span></div>
+        <div><b>${r.views.toLocaleString()}</b><span>Page views</span></div>
+        <div><b>${r.orders}</b><span>Website orders (${money(r.revenue_cents)})</span></div>
+        <div><b>${taps}</b><span>Taps to call, text or Messenger</span></div>
+      </div>
+      ${bars}
+      <h3>Where visitors come from</h3>
+      ${r.sources.length ? `<table class="cards"><thead><tr><th>Source</th><th>Visitors</th><th>Orders</th><th>Sales</th><th>Call / msg taps</th></tr></thead><tbody>${r.sources.map((x) => `<tr><td><b>${esc(x.name)}</b></td><td data-l="Visitors">${x.visitors}</td><td data-l="Orders">${x.orders || ''}</td><td data-l="Sales">${x.revenue_cents ? money(x.revenue_cents) : ''}</td><td data-l="Taps">${x.taps || ''}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No visits yet. They start showing up as soon as people visit the site.</p>'}
+      <div class="grid2" style="margin-top:1.2rem">
+        <div><h3>Top pages</h3>${r.pages.length ? `<table><tbody>${r.pages.map((p) => `<tr><td>${esc(p.path === '/' ? 'Home' : p.path.replace(/^\//, ''))}</td><td><b>${p.views}</b></td></tr>`).join('')}</tbody></table>` : '<p class="muted">None yet</p>'}</div>
+        <div><h3>Devices</h3>${r.devices.length ? `<table><tbody>${r.devices.map((d) => `<tr><td>${esc(d.device)}</td><td><b>${d.n}</b></td></tr>`).join('')}</tbody></table>` : '<p class="muted">None yet</p>'}
+          ${r.campaigns.length ? `<h3 style="margin-top:1rem">Tagged posts &amp; campaigns</h3><table><tbody>${r.campaigns.map((c) => `<tr><td>${esc(c.campaign)} <span class="muted">(${esc(c.source)})</span></td><td><b>${c.n}</b></td></tr>`).join('')}</tbody></table>` : ''}</div>
+      </div>`;
+    const base = location.origin;
+    $('tr-links').innerHTML = [['Facebook posts', 'facebook'], ['QR code on labels or flyers', 'qr'], ['Google Business Profile', 'gbp']]
+      .map(([label, tag]) => `<li>${label}: <b>${esc(base)}/?utm_source=${tag}</b></li>`).join('') + `<li>Name a single post: <b>${esc(base)}/?utm_source=facebook&amp;utm_campaign=black-friday</b></li>`;
+  }
+  $('tr-days').addEventListener('change', trLoad);
 
   // ---------- giveaway ----------
   async function huntLoad() {

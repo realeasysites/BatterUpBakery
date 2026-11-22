@@ -21,6 +21,7 @@ app.use(require('./routes/admin'));
 const WHOLESALE = process.env.WHOLESALE_ENABLED === '1';
 if (WHOLESALE) app.use(require('./routes/wholesale'));
 app.use(require('./routes/hunt'));
+app.use(require('./routes/traffic'));
 app.use('/api', express.json({ limit: '50kb' }), require('./routes/public'));
 
 app.get('/healthz', (req, res) => res.send('ok'));
