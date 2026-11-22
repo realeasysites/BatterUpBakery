@@ -80,6 +80,7 @@
     .bar input { width: 100% !important; }
   }
   @media print { .top, .tabs, .bar, .no-print { display: none !important; } body { background: #fff; } }
+  .pill[aria-pressed="true"] { background: var(--plum); color: #fff; border-color: var(--plum); }
 </style>
 </head>
 <body>
@@ -154,6 +155,7 @@
         <h3>Add a shop</h3>
         <div class="bar" style="margin:.6rem 0 0">
           <input id="wc-name" placeholder="Shop name" style="flex:1;min-width:180px">
+          <input id="wc-address" placeholder="Street address" style="flex:1;min-width:200px">
           <input id="wc-town" placeholder="Town" style="width:150px">
           <input id="wc-email" placeholder="Email for invoices" style="width:220px">
           <input id="wc-mini" placeholder="$ per mini" inputmode="decimal" style="width:110px">
@@ -172,10 +174,14 @@
         <div><label for="inv-cust">Shop</label><select id="inv-cust"></select></div>
         <div><label for="inv-date">Date</label><input type="date" id="inv-date"></div>
       </div>
-      <label>Items</label>
-      <div class="line line-head" aria-hidden="true"><span class="fl">Flavor</span><span>Type</span><span>Qty</span><span>$ each</span><span></span></div>
-      <div id="inv-lines"></div>
-      <button type="button" class="btn small ghost" id="inv-addline">+ Add a flavor</button>
+      <div class="row">
+        <div><label for="inv-mq">Minis (how many)</label><input id="inv-mq" type="number" min="0" inputmode="numeric"></div>
+        <div><label for="inv-mp">$ per mini</label><input id="inv-mp" inputmode="decimal"></div>
+      </div>
+      <div class="row">
+        <div><label for="inv-wq">Whole cheesecakes (how many)</label><input id="inv-wq" type="number" min="0" inputmode="numeric"></div>
+        <div><label for="inv-wp">$ per whole</label><input id="inv-wp" inputmode="decimal"></div>
+      </div>
       <label for="inv-notes" style="margin-top:1rem">Notes (optional)</label>
       <input id="inv-notes">
       <div class="cart-total" style="margin-top:1rem"><span>Total</span><span id="inv-total">$0.00</span></div>
@@ -183,6 +189,26 @@
       <div class="bar" style="justify-content:flex-end;margin-top:.8rem">
         <button type="button" class="btn small ghost" id="inv-cancel">Cancel</button>
         <button type="button" class="btn small" id="inv-save">Save invoice</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="pay-dlg">
+    <form method="dialog">
+      <h3 style="margin-top:0" id="pay-title">Record payment</h3>
+      <label>How did they pay?</label>
+      <div class="bar" id="pay-methods" style="margin:.3rem 0 0">
+        <button type="button" class="pill" data-pm="cash">Cash</button>
+        <button type="button" class="pill" data-pm="check">Check</button>
+        <button type="button" class="pill" data-pm="card">Credit card</button>
+        <button type="button" class="pill" data-pm="eft">EFT</button>
+      </div>
+      <div id="pay-check-wrap" hidden><label for="pay-check">Check number</label><input id="pay-check" inputmode="numeric" autocomplete="off"></div>
+      <label for="pay-date">Date paid</label><input type="date" id="pay-date">
+      <div class="err" id="pay-err" hidden></div>
+      <div class="bar" style="justify-content:flex-end;margin-top:.8rem">
+        <button type="button" class="btn small ghost" id="pay-cancel">Cancel</button>
+        <button type="button" class="btn small" id="pay-save">Mark paid</button>
       </div>
     </form>
   </dialog>
@@ -378,9 +404,6 @@
         else minis[name] = (minis[name] || 0) + n * i.qty;
       }
     }
-    for (const inv of wsForSheet) for (const l of inv.lines) {
-      if (l.kind === 'whole') wholes[l.flavor] = (wholes[l.flavor] || 0) + l.qty; else minis[l.flavor] = (minis[l.flavor] || 0) + l.qty;
-    }
     const tbl = (obj, unit) => Object.keys(obj).length ? `<table class="cards"><thead><tr><th>Flavor</th><th>${unit}</th></tr></thead><tbody>${Object.entries(obj).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => `<tr><td>${esc(k)}</td><td><b>${v}</b></td></tr>`).join('')}</tbody></table>` : '<p class="muted">None</p>';
     // Route sheet grouped by date, then stop
     const groups = {};
@@ -392,8 +415,20 @@
       const [d, place] = k.split('|');
       return `<h3>${day(d)} · ${esc(place)}</h3><table><tbody>${groups[k].map((o) => `<tr><td style="width:28%"><b>${esc(o.name)}</b><br><span class="muted">${esc(o.phone)}</span></td><td>${o.items.map((i) => `${i.qty} × ${esc(i.label)}: ${esc(i.detail)}`).join('<br>')}${o.ship_address ? `<br><span class="muted">${esc(o.ship_address)}</span>` : ''}</td><td style="width:12%">${money(o.total_cents)}</td></tr>`).join('')}</tbody></table>`;
     }).join('');
-    const wsRoute = wsForSheet.length ? `<h2 style="margin-top:2rem;font-size:1.6rem">Wholesale deliveries</h2><table><tbody>${wsForSheet.slice().sort((a, b) => a.invoice_date.localeCompare(b.invoice_date) || a.customer.localeCompare(b.customer)).map((i) => `<tr><td style="width:28%"><b>${esc(i.customer)}</b><br><span class="muted">${day(i.invoice_date)}</span></td><td>${i.lines.map((l) => `${l.qty} ${l.kind === 'whole' ? 'whole' : 'mini'} ${esc(l.flavor)}`).join(', ')}</td><td style="width:12%">${money(i.total_cents)}</td></tr>`).join('')}</tbody></table>` : '';
-    $('sheet').innerHTML = `<p class="muted" style="margin-top:1rem">Includes website orders${wsForSheet.length ? ' and wholesale invoices' : ''} in this range.</p><div class="grid2" style="margin-top:.5rem"><div><h3>Whole cheesecakes to bake</h3>${tbl(wholes, 'Wholes')}</div><div><h3>Minis to bake</h3>${tbl(minis, 'Minis')}</div></div>${route ? `<h2 style="margin-top:2rem;font-size:1.6rem">Website orders: delivery &amp; pickup</h2>${route}` : ''}${wsRoute}`;
+    let wsRoute = '';
+    if (wsForSheet.length) {
+      const q = qtys(wsForSheet), sum = wsForSheet.reduce((t, i) => t + i.total_cents, 0);
+      const byShop = {};
+      for (const i of wsForSheet) {
+        const k = i.customer + (i.town ? ' · ' + i.town : '');
+        const b = byShop[k] = byShop[k] || { minis: 0, wholes: 0, cents: 0, day: i.invoice_date };
+        i.lines.forEach((l) => { b[l.kind === 'whole' ? 'wholes' : 'minis'] += l.qty; }); b.cents += i.total_cents;
+      }
+      wsRoute = `<h2 style="margin-top:2rem;font-size:1.6rem">Wholesale invoices</h2>
+        <div class="stats4"><div><b>${q.minis.toLocaleString()}</b><span>Minis</span></div><div><b>${q.wholes.toLocaleString()}</b><span>Whole cheesecakes</span></div><div><b>${money(sum)}</b><span>${wsForSheet.length} invoices</span></div><div><b>${Object.keys(byShop).length}</b><span>Locations</span></div></div>
+        <table class="cards"><thead><tr><th>Location</th><th>Day</th><th>Minis</th><th>Wholes</th><th>Total</th></tr></thead><tbody>${Object.entries(byShop).sort((a, b) => a[1].day.localeCompare(b[1].day) || a[0].localeCompare(b[0])).map(([k, v]) => `<tr><td><b>${esc(k)}</b></td><td data-l="Day">${day(v.day)}</td><td data-l="Minis">${v.minis}</td><td data-l="Wholes">${v.wholes || ''}</td><td data-l="Total"><b>${money(v.cents)}</b></td></tr>`).join('')}</tbody></table>`;
+    }
+    $('sheet').innerHTML = `<p class="muted" style="margin-top:1rem">Website orders by flavor${wsForSheet.length ? ', plus wholesale totals below' : ''}.</p><div class="grid2" style="margin-top:.5rem"><div><h3>Whole cheesecakes to bake</h3>${tbl(wholes, 'Wholes')}</div><div><h3>Minis to bake</h3>${tbl(minis, 'Minis')}</div></div>${route ? `<h2 style="margin-top:2rem;font-size:1.6rem">Website orders: delivery &amp; pickup</h2>${route}` : ''}${wsRoute}`;
   }
   $('range').addEventListener('change', loadOrders);
   $('status-filter').addEventListener('change', loadOrders);
@@ -508,18 +543,25 @@
     $('ws-week-label').textContent = `Week of ${day(wsWeek)}`;
     wsInvoices = (await api('/wholesale/invoices?week=' + wsWeek)).invoices;
     const sum = wsInvoices.reduce((t, i) => t + i.total_cents, 0);
-    const minis = wsInvoices.reduce((t, i) => t + i.lines.filter((l) => l.kind !== 'whole').reduce((a, l) => a + l.qty, 0), 0);
-    $('ws-week-sum').textContent = wsInvoices.length ? `${wsInvoices.length} invoices · ${money(sum)} · ${minis} minis` : '';
+    const q = qtys(wsInvoices);
+    const owed = wsInvoices.filter((i) => i.status !== 'paid').reduce((t, i) => t + i.total_cents, 0);
+    $('ws-week-sum').innerHTML = wsInvoices.length ? `<div class="stats4">
+      <div><b>${money(sum)}</b><span>${wsInvoices.length} invoice${wsInvoices.length === 1 ? '' : 's'} this week</span></div>
+      <div><b>${q.minis.toLocaleString()}</b><span>Minis</span></div>
+      <div><b>${q.wholes.toLocaleString()}</b><span>Whole cheesecakes</span></div>
+      <div><b>${money(owed)}</b><span>Not paid yet</span></div></div>` : '';
     if (!wsInvoices.length) { $('ws-list').innerHTML = `<div class="empty-state"><h3>No invoices this week yet</h3><p>Tap <b>Repeat last week's invoices</b> to copy your standing orders, or add a new one.</p></div>`; return; }
     $('ws-list').innerHTML = wsInvoices.map((i) => `
       <div class="card ${i.status === 'draft' ? 'new' : ''}">
         <div class="head">
-          <div><span class="code">#${i.number}</span> <span class="pill-status">${esc(i.status)}</span><h3>${esc(i.customer)}</h3><div class="meta">${day(i.invoice_date)}${i.town ? ' · ' + esc(i.town) : ''}</div></div>
+          <div><span class="code">#${i.number}</span> ${i.status === 'paid' ? '<span class="pill-status" style="background:#e9f4d2;color:#3c5410">Paid</span>' : `<span class="pill-status">${esc(i.status)}</span>`}<h3>${esc(i.customer)}</h3><div class="meta">${day(i.invoice_date)}${i.town ? ' · ' + esc(i.town) : ''}</div></div>
           <b style="font-size:1.25rem;color:var(--plum)">${money(i.total_cents)}</b>
         </div>
-        <ul>${i.lines.map((l) => `<li>${l.qty} ${l.kind === 'whole' ? 'whole' : 'mini'} <b>${esc(l.flavor)}</b> @ ${money(l.unit_cents)}</li>`).join('')}</ul>
+        <ul>${i.lines.map((l) => `<li><b>${l.qty}</b> ${lineName(l)} @ ${money(l.unit_cents)}</li>`).join('')}</ul>
+        ${i.status === 'paid' ? `<p class="meta" style="color:#3c5410"><b>Paid ${payText(i)}</b></p>` : ''}
         <div class="actions">
-          <select data-wstatus="${i.id}" aria-label="Status">${['draft', 'sent', 'paid'].map((s) => `<option value="${s}" ${s === i.status ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}</select>
+          ${i.status === 'paid' ? `<button class="pill" data-wunpay="${i.id}">Undo paid</button>` : `<select data-wstatus="${i.id}" aria-label="Status">${['draft', 'sent'].map((s) => `<option value="${s}" ${s === i.status ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}</select>
+          <button class="btn small" data-wpay="${i.id}">Record payment</button>`}
           <button class="pill" data-wedit="${i.id}">Edit</button>
           <a class="pill" href="/admin/invoice/${i.id}" target="_blank" style="text-decoration:none;color:inherit">Print / PDF</a>
           <button class="pill" data-wmail="${i.id}">Email</button>
@@ -527,6 +569,8 @@
         </div>
       </div>`).join('');
     document.querySelectorAll('[data-wstatus]').forEach((s) => s.addEventListener('change', async () => { await api('/wholesale/invoices/' + s.dataset.wstatus, { method: 'PATCH', body: { status: s.value } }); flash('Saved'); wsList(); }));
+    document.querySelectorAll('[data-wpay]').forEach((b) => b.addEventListener('click', () => openPay(wsInvoices.find((i) => i.id === Number(b.dataset.wpay)), wsList)));
+    document.querySelectorAll('[data-wunpay]').forEach((b) => b.addEventListener('click', async () => { await api('/wholesale/invoices/' + b.dataset.wunpay, { method: 'PATCH', body: { status: 'sent' } }); flash('Saved'); wsList(); }));
     document.querySelectorAll('[data-wedit]').forEach((b) => b.addEventListener('click', () => openInvoice(wsInvoices.find((i) => i.id === Number(b.dataset.wedit)))));
     document.querySelectorAll('[data-wdel]').forEach((b) => b.addEventListener('click', async () => {
       const i = wsInvoices.find((x) => x.id === Number(b.dataset.wdel));
@@ -549,41 +593,72 @@
     await api('/wholesale/clear-demo', { method: 'POST' }); wsLoad();
   });
 
-  // invoice editor
-  function lineRow(l = {}) {
-    const div = document.createElement('div'); div.className = 'line';
-    const opts = [...new Set([...(l.flavor ? [l.flavor] : []), ...wsFlavors])];
-    div.innerHTML = `<select class="fl" aria-label="Flavor">${opts.map((f) => `<option ${f === l.flavor ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>
-      <select class="kd" aria-label="Mini or whole"><option value="mini">Mini</option><option value="whole" ${l.kind === 'whole' ? 'selected' : ''}>Whole</option></select>
-      <input class="qt" type="number" min="1" inputmode="numeric" value="${l.qty || 6}" aria-label="Quantity">
-      <input class="pr" inputmode="decimal" value="${((l.unit_cents != null ? l.unit_cents : defaultPrice(l.kind)) / 100).toFixed(2)}" aria-label="Price each">
-      <button type="button" class="x" aria-label="Remove line">×</button>`;
-    div.querySelector('.x').addEventListener('click', () => { div.remove(); invTotal(); });
-    div.querySelector('.kd').addEventListener('change', (e) => { div.querySelector('.pr').value = (defaultPrice(e.target.value) / 100).toFixed(2); invTotal(); });
-    div.querySelectorAll('input').forEach((i) => i.addEventListener('input', invTotal));
-    $('inv-lines').appendChild(div);
+  // helpers
+  const qtys = (invs) => invs.reduce((q, i) => { i.lines.forEach((l) => { q[l.kind === 'whole' ? 'wholes' : 'minis'] += l.qty; }); return q; }, { minis: 0, wholes: 0 });
+  const GENERIC = ['Cheesecake minis', 'Whole cheesecakes'];
+  const lineName = (l) => GENERIC.includes(l.flavor) ? (l.kind === 'whole' ? 'whole cheesecake' + (l.qty === 1 ? '' : 's') : 'mini' + (l.qty === 1 ? '' : 's')) : `${l.kind === 'whole' ? 'whole' : 'mini'} ${esc(l.flavor)}`;
+  const METHOD = { cash: 'cash', check: 'check', card: 'credit card', eft: 'EFT' };
+  const payText = (i) => `${i.pay_method ? 'by ' + METHOD[i.pay_method] : ''}${i.check_no ? ' #' + esc(i.check_no) : ''}${i.paid_on ? ' on ' + day(i.paid_on) : ''}`;
+
+  // record a payment
+  let paying = null, payMethod = null, payDone = null;
+  function openPay(inv, done) {
+    paying = inv; payDone = done; payMethod = null;
+    $('pay-title').textContent = `Record payment: #${inv.number} ${inv.customer} (${money(inv.total_cents)})`;
+    document.querySelectorAll('[data-pm]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+    $('pay-check').value = ''; $('pay-check-wrap').hidden = true; $('pay-date').value = todayISO(); $('pay-err').hidden = true;
+    $('pay-dlg').showModal();
   }
+  document.querySelectorAll('[data-pm]').forEach((b) => b.addEventListener('click', () => {
+    payMethod = b.dataset.pm;
+    document.querySelectorAll('[data-pm]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    $('pay-check-wrap').hidden = payMethod !== 'check';
+    if (payMethod === 'check') $('pay-check').focus();
+  }));
+  $('pay-cancel').addEventListener('click', () => $('pay-dlg').close());
+  $('pay-save').addEventListener('click', async () => {
+    try {
+      await api('/wholesale/invoices/' + paying.id, { method: 'PATCH', body: { status: 'paid', pay_method: payMethod, check_no: $('pay-check').value, paid_on: $('pay-date').value } });
+      $('pay-dlg').close(); flash('Payment saved'); payDone && payDone();
+    } catch (e) { $('pay-err').textContent = e.message; $('pay-err').hidden = false; }
+  });
+
+  // invoice editor: totals only (minis and wholes), no flavors
   function currentCustomer() { return wsCustomers.find((c) => c.id === Number($('inv-cust').value)); }
-  function defaultPrice(kind) { const c = currentCustomer(); return c ? (kind === 'whole' ? c.price_whole_cents : c.price_mini_cents) : 0; }
-  function readLines() { return [...$('inv-lines').children].map((d) => ({ flavor: d.querySelector('.fl').value, kind: d.querySelector('.kd').value, qty: d.querySelector('.qt').value, unit: d.querySelector('.pr').value.replace(/[$,]/g, '') })); }
-  function invTotal() { $('inv-total').textContent = money(readLines().reduce((t, l) => t + (Number(l.qty) || 0) * Math.round((Number(l.unit) || 0) * 100), 0)); }
+  const cents = (v) => Math.round((Number(String(v).replace(/[$,]/g, '')) || 0) * 100);
+  function readLines() {
+    const out = [];
+    const mq = Math.floor(Number($('inv-mq').value) || 0), wq = Math.floor(Number($('inv-wq').value) || 0);
+    if (mq > 0) out.push({ flavor: 'Cheesecake minis', kind: 'mini', qty: mq, unit: (cents($('inv-mp').value) / 100).toFixed(2) });
+    if (wq > 0) out.push({ flavor: 'Whole cheesecakes', kind: 'whole', qty: wq, unit: (cents($('inv-wp').value) / 100).toFixed(2) });
+    return out;
+  }
+  function invTotal() { $('inv-total').textContent = money(readLines().reduce((t, l) => t + l.qty * cents(l.unit), 0)); }
+  function setPrices() { const c = currentCustomer(); if (!c) return; $('inv-mp').value = (c.price_mini_cents / 100).toFixed(2); $('inv-wp').value = (c.price_whole_cents / 100).toFixed(2); invTotal(); }
   function openInvoice(inv) {
     editing = inv || null;
+    if (!wsCustomers.length) return alert('Add a shop first under Wholesale > Shops.');
     $('inv-title').textContent = inv ? `Edit invoice #${inv.number}` : 'New invoice';
     $('inv-cust').innerHTML = wsCustomers.filter((c) => c.active || (inv && c.id === inv.customer_id)).map((c) => `<option value="${c.id}" ${inv && c.id === inv.customer_id ? 'selected' : ''}>${esc(c.name)}${c.town ? ' (' + esc(c.town) + ')' : ''}</option>`).join('');
-    if (!wsCustomers.length) return alert('Add a shop first under Wholesale > Shops.');
     $('inv-date').value = inv ? inv.invoice_date : addDays(wsWeek, 1);
     $('inv-notes').value = inv ? inv.notes || '' : '';
-    $('inv-lines').innerHTML = '';
-    (inv ? inv.lines : [{}]).forEach(lineRow);
+    setPrices();
+    $('inv-mq').value = ''; $('inv-wq').value = '';
+    if (inv) {
+      const m = inv.lines.filter((l) => l.kind !== 'whole'), w = inv.lines.filter((l) => l.kind === 'whole');
+      if (m.length) { $('inv-mq').value = m.reduce((t, l) => t + l.qty, 0); $('inv-mp').value = (m[0].unit_cents / 100).toFixed(2); }
+      if (w.length) { $('inv-wq').value = w.reduce((t, l) => t + l.qty, 0); $('inv-wp').value = (w[0].unit_cents / 100).toFixed(2); }
+    }
     $('inv-err').hidden = true; invTotal();
     $('inv-dlg').showModal();
   }
+  $('inv-cust').addEventListener('change', setPrices);
+  ['inv-mq', 'inv-mp', 'inv-wq', 'inv-wp'].forEach((id) => $(id).addEventListener('input', invTotal));
   $('ws-new').addEventListener('click', () => openInvoice(null));
-  $('inv-addline').addEventListener('click', () => { lineRow({}); invTotal(); });
   $('inv-cancel').addEventListener('click', () => $('inv-dlg').close());
   $('inv-save').addEventListener('click', async () => {
     const body = { customer_id: $('inv-cust').value, invoice_date: $('inv-date').value, notes: $('inv-notes').value, lines: readLines() };
+    if (!body.lines.length) { $('inv-err').textContent = 'Enter how many minis or wholes.'; $('inv-err').hidden = false; return; }
     try {
       await api('/wholesale/invoices' + (editing ? '/' + editing.id : ''), { method: editing ? 'PUT' : 'POST', body });
       $('inv-dlg').close(); flash('Invoice saved');
@@ -597,20 +672,24 @@
     $('ws-custom').hidden = !custom; $('ws-date').hidden = custom;
     if (custom && !$('ws-from').value) { $('ws-to').value = todayISO(); $('ws-from').value = addDays(todayISO(), -30); }
     const r = await api(`/wholesale/report?period=${$('ws-period').value}&date=${$('ws-date').value || todayISO()}&from=${$('ws-from').value}&to=${$('ws-to').value}`);
-    const flav = Object.entries(r.flavors).sort((a, b) => (b[1].minis + b[1].wholes) - (a[1].minis + a[1].wholes));
-    const shops = Object.entries(r.shops).sort((a, b) => b[1] - a[1]);
+    const shops = Object.entries(r.shops).sort((a, b) => a[0].localeCompare(b[0]));
+    const methods = Object.entries(r.methods);
     $('ws-report').innerHTML = `
       <p class="muted">${day(r.from)} to ${day(r.to)}</p>
       <div class="stats4">
         <div><b>${money(r.total_cents)}</b><span>Total invoiced (${r.invoices} invoices)</span></div>
-        <div><b>${money(r.paid_cents)}</b><span>Paid</span></div>
-        <div><b>${money(r.unpaid_cents)}</b><span>Not paid yet</span></div>
-        <div><b>${r.minis.toLocaleString()}${r.wholes ? ' + ' + r.wholes : ''}</b><span>Minis${r.wholes ? ' + wholes' : ''} sold</span></div>
+        <div><b>${r.minis.toLocaleString()}</b><span>Minis</span></div>
+        <div><b>${r.wholes.toLocaleString()}</b><span>Whole cheesecakes</span></div>
+        <div><b>${money(r.paid_cents)}</b><span>Paid (${money(r.unpaid_cents)} not paid yet)</span></div>
       </div>
       <div class="grid2">
-        <div><h3>Quantity by flavor</h3>${flav.length ? `<table><thead><tr><th>Flavor</th><th>Minis</th><th>Wholes</th></tr></thead><tbody>${flav.map(([k, v]) => `<tr><td>${esc(k)}</td><td><b>${v.minis}</b></td><td>${v.wholes || ''}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No invoices in this period.</p>'}</div>
-        <div><h3>By shop</h3>${shops.length ? `<table><thead><tr><th>Shop</th><th>Total</th></tr></thead><tbody>${shops.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${money(v)}</td></tr>`).join('')}</tbody></table>` : ''}</div>
+        <div><h3>By shop</h3>${shops.length ? `<table><thead><tr><th>Shop</th><th>Minis</th><th>Wholes</th><th>Total</th></tr></thead><tbody>${shops.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v.minis}</td><td>${v.wholes || ''}</td><td><b>${money(v.cents)}</b></td></tr>`).join('')}</tbody></table>` : '<p class="muted">No invoices in this period.</p>'}</div>
+        <div><h3>Payments received</h3>${methods.length ? `<table><thead><tr><th>How</th><th>Count</th><th>Amount</th></tr></thead><tbody>${methods.map(([k, v]) => `<tr><td>${METHOD[k] ? METHOD[k][0].toUpperCase() + METHOD[k].slice(1) : 'Other'}</td><td>${v.count}</td><td><b>${money(v.cents)}</b></td></tr>`).join('')}</tbody></table>` : '<p class="muted">No payments recorded in this period.</p>'}
+          <h3 style="margin-top:1.4rem">Still owed (all weeks)</h3>${r.owed.length ? `<table><thead><tr><th>Shop</th><th>Invoice</th><th>Amount</th><th></th></tr></thead><tbody>${r.owed.map((o) => `<tr><td>${esc(o.customer)}</td><td>#${o.number} · ${day(o.invoice_date)}</td><td><b>${money(o.total_cents)}</b></td><td><button class="pill" data-opay="${o.id}">Paid</button></td></tr>`).join('')}</tbody></table><p class="meta">Total owed: <b>${money(r.owed.reduce((t, o) => t + o.total_cents, 0))}</b></p>` : '<p class="muted">Nothing owed. Everyone is paid up.</p>'}</div>
       </div>`;
+    $('ws-report').querySelectorAll('[data-opay]').forEach((b) => b.addEventListener('click', () => {
+      const o = r.owed.find((x) => x.id === Number(b.dataset.opay)); openPay(o, wsReport);
+    }));
   }
   $('ws-period').addEventListener('change', wsReport);
   $('ws-date').addEventListener('change', wsReport);
@@ -620,8 +699,9 @@
   // shops
   async function wsShops() {
     wsCustomers = (await api('/wholesale/customers')).customers;
-    $('wc-list').innerHTML = `<table class="cards"><thead><tr><th>Shop</th><th>Town</th><th>Email</th><th>$/mini</th><th>$/whole</th><th>Active</th><th></th></tr></thead><tbody>${wsCustomers.map((c) => `<tr data-id="${c.id}">
+    $('wc-list').innerHTML = `<table class="cards"><thead><tr><th>Shop</th><th>Address</th><th>Town</th><th>Email</th><th>$/mini</th><th>$/whole</th><th>Active</th><th></th></tr></thead><tbody>${wsCustomers.map((c) => `<tr data-id="${c.id}">
       <td><input type="text" data-k="name" value="${esc(c.name)}" aria-label="Shop name"></td>
+ <td data-l="Address"><input type="text" data-k="address" value="${esc(c.address || '')}" aria-label="Address"></td>
       <td data-l="Town"><input type="text" data-k="town" value="${esc(c.town || '')}" aria-label="Town"></td>
       <td data-l="Email"><input type="text" data-k="email" value="${esc(c.email || '')}" aria-label="Email"></td>
       <td data-l="$ per mini"><input type="text" data-k="price_mini" value="${(c.price_mini_cents / 100).toFixed(2)}" inputmode="decimal" style="width:90px" aria-label="Price per mini"></td>
@@ -641,8 +721,8 @@
   }
   $('wc-add').addEventListener('click', async () => {
     if (!$('wc-name').value.trim()) return alert('Enter the shop name.');
-    await api('/wholesale/customers', { method: 'POST', body: { name: $('wc-name').value, town: $('wc-town').value, email: $('wc-email').value, price_mini: $('wc-mini').value.replace(/[$,]/g, ''), price_whole: $('wc-whole').value.replace(/[$,]/g, '') } });
-    ['wc-name', 'wc-town', 'wc-email', 'wc-mini', 'wc-whole'].forEach((id) => ($(id).value = ''));
+    await api('/wholesale/customers', { method: 'POST', body: { name: $('wc-name').value, address: $('wc-address').value, town: $('wc-town').value, email: $('wc-email').value, price_mini: $('wc-mini').value.replace(/[$,]/g, ''), price_whole: $('wc-whole').value.replace(/[$,]/g, '') } });
+    ['wc-name', 'wc-address', 'wc-town', 'wc-email', 'wc-mini', 'wc-whole'].forEach((id) => ($(id).value = ''));
     wsShops();
   });
 

@@ -97,6 +97,14 @@ for (const [col, type] of [['pay_method', "TEXT NOT NULL DEFAULT 'later'"], ['sq
   if (!orderCols.includes(col)) db.exec(`ALTER TABLE orders ADD COLUMN ${col} ${type}`);
 }
 
+// Wholesale: shop addresses and payment tracking (method, check number, date paid).
+const wsCustCols = db.prepare('PRAGMA table_info(ws_customers)').all().map((c) => c.name);
+if (!wsCustCols.includes('address')) db.exec('ALTER TABLE ws_customers ADD COLUMN address TEXT');
+const wsInvCols = db.prepare('PRAGMA table_info(ws_invoices)').all().map((c) => c.name);
+for (const [col, type] of [['pay_method', 'TEXT'], ['check_no', 'TEXT'], ['paid_on', 'TEXT']]) {
+  if (!wsInvCols.includes(col)) db.exec(`ALTER TABLE ws_invoices ADD COLUMN ${col} ${type}`);
+}
+
 const DEFAULT_SETTINGS = {
   price_whole: '5940',
   price_gf_addon: '700',
@@ -185,7 +193,8 @@ if (process.env.WHOLESALE_ENABLED === '1' && db.prepare('SELECT COUNT(*) n FROM 
       // Three past weeks of standing orders for the first 8 shops.
       if (i < 8) for (let w = 3; w >= 1; w--) {
         const d = new Date(monday); d.setUTCDate(d.getUTCDate() - 7 * w + 1 + (i % 2)); // Tue or Wed
-        const lines = [0, 1, 2].map((k) => ({ flavor: flavors[(i * 3 + k) % flavors.length], kind: 'mini', qty: 6 + ((i + k) % 3) * 3, unit_cents: 350 }));
+        const lines = [{ flavor: 'Cheesecake minis', kind: 'mini', qty: 18 + (i % 4) * 6, unit_cents: 350 }];
+        if (i % 3 === 0) lines.push({ flavor: 'Whole cheesecakes', kind: 'whole', qty: 1 + (i % 2), unit_cents: 4500 });
         const total = lines.reduce((t, l) => t + l.qty * l.unit_cents, 0);
         insI.run(num++, cid, d.toISOString().slice(0, 10), JSON.stringify(lines), total, w > 1 ? 'paid' : 'sent');
       }
