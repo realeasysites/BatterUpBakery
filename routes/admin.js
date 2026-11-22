@@ -116,12 +116,13 @@ router.patch('/api/admin/stops/:id', (req, res) => {
   const s = db.prepare('SELECT * FROM stops WHERE id = ?').get(Number(req.params.id));
   if (!s) return res.status(404).json({ error: 'Not found' });
   const b = req.body;
-  db.prepare('UPDATE stops SET name = ?, town = ?, day = ?, route = ?, active = ? WHERE id = ?').run(
+  db.prepare('UPDATE stops SET name = ?, town = ?, day = ?, route = ?, active = ?, slices = ? WHERE id = ?').run(
     b.name !== undefined ? clean(b.name, 80) || s.name : s.name,
     b.town !== undefined ? clean(b.town, 60) || s.town : s.town,
     b.day === 'Tuesday' || b.day === 'Wednesday' ? b.day : s.day,
     b.route !== undefined ? Math.max(1, Math.min(9, Number(b.route) || 1)) : s.route,
     b.active !== undefined ? (b.active ? 1 : 0) : s.active,
+    b.slices !== undefined ? (b.slices ? 1 : 0) : s.slices,
     s.id);
   res.json({ ok: true });
 });
@@ -164,7 +165,7 @@ router.get('/api/admin/square/test/:orderId', async (req, res) => {
 });
 
 // Prices and settings
-const PRICE_KEYS = ['price_whole', 'price_gf_addon', 'price_mini6', 'price_mini10x5', 'price_mini10x10'];
+const PRICE_KEYS = ['price_whole', 'price_gf_addon', 'price_mini6', 'price_mini10x5', 'price_mini10x10', 'price_ship'];
 router.put('/api/admin/settings', (req, res) => {
   const b = req.body || {};
   for (const k of PRICE_KEYS) {

@@ -73,7 +73,7 @@
         <div class="ways-pick" role="group" aria-label="How to get it">
           <button type="button" class="pack-opt" data-way="route" aria-pressed="true"><b>Route meet-up</b><span>Free</span><small>Tuesday or Wednesday</small></button>
           <button type="button" class="pack-opt" data-way="pickup" aria-pressed="false"><b>BUB Shed pickup</b><span>Free</span><small>Litchfield, Wed to Sat</small></button>
-          <button type="button" class="pack-opt" data-way="ship" aria-pressed="false"><b>Ship in Maine</b><span>Fee quoted</span><small>Mini packs only</small></button>
+          <button type="button" class="pack-opt" data-way="ship" aria-pressed="false"><b>Ship in Maine</b><span data-ship-price>$19.95</span><small>Mini packs only</small></button>
         </div>
         <div data-show="route">
           <label for="stop">Meet-up spot</label>
@@ -88,7 +88,7 @@
         <div data-show="ship" hidden>
           <label for="ship-address">Shipping address (Maine only)</label>
           <textarea id="ship-address" rows="3" placeholder="Street, town, ME, ZIP" autocomplete="street-address"></textarea>
-          <p class="hint" id="ship-hint">Mini packs only (whole cheesecakes can't be shipped). Ships Wednesday by UPS. We'll text or email you the shipping fee to confirm before it goes out.</p>
+          <p class="hint" id="ship-hint">Mini packs only (whole cheesecakes can't be shipped). Ships out Wednesday by UPS. Flat-rate shipping.</p>
         </div>
 
         <h2 style="margin-top:1.6rem">3. Your info</h2>
@@ -116,8 +116,9 @@
       <h2 id="cart-h">Your order</h2>
       <ul class="cart-items" id="cart-items"></ul>
       <p class="empty" id="cart-empty">Nothing added yet. Pick a size and flavors to start.</p>
+      <div class="cart-total" id="ship-line" hidden style="font-size:1rem;border-top:0;padding-top:0"><span>Shipping (flat, UPS in Maine)</span><span id="ship-amt"></span></div>
       <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
-      <p class="hint" style="margin-top:0">Tax included. Pay when you get your order; we'll confirm details first.</p>
+      <p class="hint" style="margin-top:0">Tax included. We'll contact you to confirm the details.</p>
       <div class="err" id="order-err" hidden></div>
       <button class="btn" id="place" style="width:100%;justify-content:center" disabled>Place order</button>
       <p class="hint center">Rather message us? <a href="https://m.me/100064381800560" target="_blank" rel="noopener">Order on Facebook Messenger</a></p>

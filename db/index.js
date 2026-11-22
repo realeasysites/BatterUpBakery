@@ -97,6 +97,11 @@ for (const [col, type] of [['pay_method', "TEXT NOT NULL DEFAULT 'later'"], ['sq
   if (!orderCols.includes(col)) db.exec(`ALTER TABLE orders ADD COLUMN ${col} ${type}`);
 }
 
+// Route shops that serve cheesecake by the slice instead of minis (Loreen, Nov 22).
+if (!db.prepare('PRAGMA table_info(stops)').all().some((c) => c.name === 'slices')) {
+  db.exec('ALTER TABLE stops ADD COLUMN slices INTEGER NOT NULL DEFAULT 0');
+}
+
 // Wholesale: shop addresses and payment tracking (method, check number, date paid).
 const wsCustCols = db.prepare('PRAGMA table_info(ws_customers)').all().map((c) => c.name);
 if (!wsCustCols.includes('address')) db.exec('ALTER TABLE ws_customers ADD COLUMN address TEXT');
@@ -107,6 +112,7 @@ for (const [col, type] of [['pay_method', 'TEXT'], ['check_no', 'TEXT'], ['paid_
 
 const DEFAULT_SETTINGS = {
   card_payments: '0',
+  price_ship: '1995',
   site_public: '0',
   price_whole: '5940',
   price_gf_addon: '700',
@@ -212,6 +218,12 @@ function getSettings() {
 }
 function setSetting(key, value) {
   db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(value));
+}
+
+// One time: mark the shops that serve slices, not minis (editable after in Shops & route).
+if (!db.prepare("SELECT 1 FROM settings WHERE key = 'slices_marked'").get() && db.prepare('SELECT COUNT(*) n FROM stops').get().n) {
+  db.prepare(`UPDATE stops SET slices = 1 WHERE name LIKE 'Doolin%' OR name LIKE '%Depot%' OR name LIKE 'Tavern%' OR name LIKE '%Liberal%' OR name LIKE 'Bob%' OR name LIKE 'Foggy%'`).run();
+  db.prepare("INSERT INTO settings (key, value) VALUES ('slices_marked', '1')").run();
 }
 
 module.exports = { db, getSettings, setSetting, DATA_DIR };

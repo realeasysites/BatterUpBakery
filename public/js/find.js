@@ -1,4 +1,4 @@
-// Find a slice: searchable list of shops, grouped by delivery day and route.
+// Find a slice: searchable list of shops, A to Z by town, marked Minis or Slices.
 (function () {
   const { esc, stops } = window.BUB;
   const list = document.getElementById('stop-list');
@@ -22,14 +22,13 @@
       list.innerHTML = `<div class="no-results"><p>No shops match "${esc(q.value)}" yet.</p><p>We can still get you cheesecake: <a href="/order">order online</a> for a route meet-up, BUB Shed pickup or shipping anywhere in Maine.</p></div>`;
       return;
     }
-    let html = '';
-    for (const d of ['Tuesday', 'Wednesday']) {
-      const inDay = hit.filter((s) => s.day === d);
-      if (!inDay.length) continue;
-      html += `<div class="day-group"><h2>${d} delivery <span class="tag">${inDay.length} ${inDay.length === 1 ? 'shop' : 'shops'}</span></h2><div class="stops">`;
-      html += inDay.map((s) => `<div class="stop"><b>${esc(s.name)}</b><span>${esc(s.town)}</span><br><a href="${mapLink(s)}" target="_blank" rel="noopener">Directions</a></div>`).join('');
-      html += '</div></div>';
+    const sorted = hit.slice().sort((a, b) => a.town.localeCompare(b.town) || a.name.localeCompare(b.name));
+    let html = '', letter = '';
+    html += `<p class="muted" style="margin:0 0 1rem">${sorted.length} ${sorted.length === 1 ? 'shop' : 'shops'}${day === 'all' ? '' : ' on ' + day}, A to Z by town</p><div class="stops">`;
+    for (const s of sorted) {
+      html += `<div class="stop"><span class="tag" style="float:right;${s.slices ? 'background:#fde8ea;color:#8a1424' : ''}">${s.slices ? 'Slices' : 'Minis'}</span><b>${esc(s.town)}</b><span>${esc(s.name)}</span><br><span class="muted" style="font-size:.85rem">${esc(s.day)} delivery</span> · <a href="${mapLink(s)}" target="_blank" rel="noopener">Directions</a></div>`;
     }
+    html += '</div>';
     list.innerHTML = html;
   }
 

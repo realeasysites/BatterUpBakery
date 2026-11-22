@@ -32,7 +32,7 @@ function activeFlavors() {
     .map((f) => ({ ...f, photo: photos[slug(f.name)] || null }));
 }
 function activeStops() {
-  return db.prepare('SELECT id, name, town, day, route FROM stops WHERE active = 1 ORDER BY day DESC, route, sort, name').all();
+  return db.prepare('SELECT id, name, town, day, route, slices FROM stops WHERE active = 1 ORDER BY day DESC, route, sort, name').all();
 }
 
 router.get('/menu', (req, res) => {
@@ -42,6 +42,7 @@ router.get('/menu', (req, res) => {
     ...productsWithPrices(s),
     orders_open: s.orders_open !== '0',
     card_payments: square.enabled(),
+    ship_cents: Number(s.price_ship) || 0,
     announcement: s.announcement || '',
     cycle: currentCycle()
   });
@@ -78,7 +79,9 @@ router.post('/orders', async (req, res) => {
     if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new OrderError('That email address doesn\'t look right.');
 
     const flavorsById = new Map(activeFlavors().map((f) => [f.id, f]));
-    const { items, total_cents } = priceItems(b.items, flavorsById, s);
+    const priced = priceItems(b.items, flavorsById, s);
+    const items = priced.items;
+    let shipTotal = 0;
 
     const cycle = currentCycle();
     let fulfillment = b.fulfillment;
@@ -102,12 +105,17 @@ router.post('/orders', async (req, res) => {
       if (!/\b(ME|Maine)\b/i.test(ship_address)) throw new OrderError('We ship within the State of Maine. Please include ME in the address.');
       fulfill_date = cycle.ship.date;
       fulfillment_label = `UPS shipping (ships ${cycle.ship.label}) to ${ship_address}`;
+      // Flat-rate shipping, set in the dashboard (Prices & settings).
+      const ship = Number(s.price_ship) || 0;
+      if (ship > 0) items.push({ type: 'shipping', label: 'Shipping', detail: 'UPS within Maine, flat rate', qty: 1, unit_cents: ship, line_cents: ship, counts: {} });
+      shipTotal = ship;
     } else {
       throw new OrderError('Please choose pickup, route meet-up or shipping.');
     }
 
-    // Card payment now (Square) for pickup/route orders; shipping is paid later once the fee is known.
-    const payCard = b.pay === 'card' && square.enabled() && fulfillment !== 'ship';
+    const total_cents = priced.total_cents + shipTotal;
+    // Card payment now (Square) or pay later. Shipping is a flat fee, so shipped orders can pay by card too.
+    const payCard = b.pay === 'card' && square.enabled();
     const code = newCode();
     const host = (req.get('host') || '').replace(/^www\./, '').split(':')[0];
     const source = b.visit && typeof b.visit === 'object' ? classifySource(b.visit, host) : 'Direct / typed in';

@@ -277,7 +277,7 @@
       </div>
     </div>
     <p class="muted">These show on the Find a Slice page and as meet-up spots on the order form. Uncheck <b>Showing</b> to hide one.</p>
-    <table class="cards"><thead><tr><th>Shop</th><th>Town</th><th>Day</th><th class="hide-sm">Route</th><th>Showing</th><th></th></tr></thead><tbody id="stop-rows"></tbody></table>
+    <table class="cards"><thead><tr><th>Shop</th><th>Town</th><th>Day</th><th class="hide-sm">Route</th><th>Slices only</th><th>Showing</th><th></th></tr></thead><tbody id="stop-rows"></tbody></table>
   </section>
 
   <section data-panel="settings" style="padding:0" hidden>
@@ -289,6 +289,7 @@
         <label for="p-m6">Mini 6-pack ($)</label><input id="p-m6" inputmode="decimal">
         <label for="p-m105">Mini 10-pack, up to 5 flavors ($)</label><input id="p-m105" inputmode="decimal">
         <label for="p-m1010">Mini 10-pack, up to 10 flavors ($)</label><input id="p-m1010" inputmode="decimal">
+        <label for="p-ship">Shipping, flat rate per order ($)</label><input id="p-ship" inputmode="decimal">
       </div>
       <div class="card settings">
         <h3>Online ordering</h3>
@@ -494,6 +495,7 @@
       <td data-l="Town"><input type="text" value="${esc(s.town)}" data-k="town" aria-label="Town"></td>
       <td data-l="Delivery day"><select data-k="day" aria-label="Day"><option ${s.day === 'Tuesday' ? 'selected' : ''}>Tuesday</option><option ${s.day === 'Wednesday' ? 'selected' : ''}>Wednesday</option></select></td>
       <td class="hide-sm"><select data-k="route" aria-label="Route">${[1, 2, 3, 4].map((n) => `<option value="${n}" ${s.route === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
+ <td data-l="Slices, not minis"><input type="checkbox" data-k="slices" ${s.slices ? 'checked' : ''} aria-label="Slices only"></td>
       <td data-l="Showing on site"><input type="checkbox" data-k="active" ${s.active ? 'checked' : ''} aria-label="Showing"></td>
       <td><button class="del" data-dels>Delete</button></td></tr>`).join('');
     $('stop-rows').querySelectorAll('input,select').forEach((inp) => inp.addEventListener('change', () => {
@@ -513,7 +515,7 @@
   });
 
   // ---------- settings ----------
-  const priceFields = { 'p-whole': 'price_whole', 'p-gf': 'price_gf_addon', 'p-m6': 'price_mini6', 'p-m105': 'price_mini10x5', 'p-m1010': 'price_mini10x10' };
+  const priceFields = { 'p-whole': 'price_whole', 'p-gf': 'price_gf_addon', 'p-m6': 'price_mini6', 'p-m105': 'price_mini10x5', 'p-m1010': 'price_mini10x10', 'p-ship': 'price_ship' };
   let sqTestOrder = null;
   async function loadSquare() {
     const q = await api('/square');
