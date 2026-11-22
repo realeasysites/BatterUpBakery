@@ -29,6 +29,20 @@ app.use(require('./routes/admin'));
 // Wholesale invoicing is an add-on: only on when WHOLESALE_ENABLED=1 (the V2 playground has it on).
 const WHOLESALE = process.env.WHOLESALE_ENABLED === '1';
 if (WHOLESALE) app.use(require('./routes/wholesale'));
+
+// Private preview: until the owner flips "Website is public" in Prices & settings, only people
+// signed in to the dashboard (Loreen and Kivvy) see the site. Everyone else gets a coming-soon page.
+const { isAuthed } = require('./lib/auth');
+const { getSettings } = require('./db');
+const OPEN_PATHS = /^\/(css|img|fonts)\/|^\/(favicon\.ico|robots\.txt|healthz)$/;
+app.use((req, res, next) => {
+  if (OPEN_PATHS.test(req.path) || getSettings().site_public === '1' || isAuthed(req)) return next();
+  res.setHeader('X-Robots-Tag', 'noindex');
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.path.startsWith('/api/')) return res.status(403).json({ error: 'Opening soon.' });
+  res.status(200).sendFile(path.join(__dirname, 'public', 'soon.html'));
+});
+
 app.use(require('./routes/hunt'));
 app.use(require('./routes/traffic'));
 app.use('/api', express.json({ limit: '50kb' }), require('./routes/public'));

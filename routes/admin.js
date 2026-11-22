@@ -174,6 +174,7 @@ router.put('/api/admin/settings', (req, res) => {
     setSetting(k, cents);
   }
   if (b.orders_open !== undefined) setSetting('orders_open', b.orders_open ? '1' : '0');
+  if (b.site_public !== undefined) setSetting('site_public', b.site_public ? '1' : '0');
   if (b.announcement !== undefined) setSetting('announcement', clean(b.announcement, 200));
   res.json({ ok: true, settings: getSettings() });
 });

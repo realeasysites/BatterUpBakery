@@ -299,6 +299,11 @@
         <p class="muted">Leave blank to show this week's order cutoff.</p>
       </div>
     </div>
+    <div class="card settings" id="pub-card">
+      <h3>Who can see the website</h3>
+      <label class="check" style="margin:.4rem 0"><input type="checkbox" id="s-public"> <b>Website is public</b></label>
+      <p class="meta" id="pub-status"></p>
+    </div>
     <div class="card settings" id="em-card">
       <h3>Order alert emails</h3>
       <p class="meta" id="em-status">Checking…</p>
@@ -543,11 +548,20 @@
     try { const r = await api('/email/test', { method: 'POST' }); $('em-msg').textContent = `Sent to ${r.to}. Check that inbox (and Junk the first time).`; }
     catch (e) { $('em-msg').textContent = e.message; }
   });
+  function pubText() {
+    $('pub-status').textContent = $('s-public').checked ? 'PUBLIC: anyone with the link can see the site and order.' : 'PRIVATE: only people signed in to this dashboard can see the site. Everyone else sees a "coming Black Friday" page with your Messenger and phone.';
+  }
+  $('s-public').addEventListener('change', async () => {
+    if ($('s-public').checked && !confirm('Open the website to everyone now?')) { $('s-public').checked = false; return; }
+    await api('/settings', { method: 'PUT', body: { site_public: $('s-public').checked } });
+    pubText(); flash($('s-public').checked ? 'Website is public' : 'Website is private');
+  });
   async function loadSettings() {
     loadSquare(); loadEmail();
     const { settings } = await api('/overview');
     for (const [id, k] of Object.entries(priceFields)) $(id).value = (Number(settings[k]) / 100).toFixed(2);
     $('s-open').checked = settings.orders_open !== '0';
+    $('s-public').checked = settings.site_public === '1'; pubText();
     $('s-ann').value = settings.announcement || '';
   }
   $('save-settings').addEventListener('click', async () => {
