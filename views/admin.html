@@ -285,6 +285,12 @@
         <p class="muted">Leave blank to show this week's order cutoff.</p>
       </div>
     </div>
+    <div class="card settings" id="em-card">
+      <h3>Order alert emails</h3>
+      <p class="meta" id="em-status">Checking…</p>
+      <div class="bar" style="margin-top:.6rem"><button class="btn small" id="em-test">Send a test email</button></div>
+      <p class="muted" id="em-msg"></p>
+    </div>
     <div class="card settings" id="sq-card">
       <h3>Card payments (Square)</h3>
       <p class="meta" id="sq-status">Checking…</p>
@@ -505,8 +511,18 @@
     try { const r = await api('/square/test/' + encodeURIComponent(sqTestOrder)); $('sq-msg').textContent = r.paid ? 'Yes! The $1 reached your Square. Card payments work.' : 'Not yet. If you finished paying, wait a few seconds and tap again.'; }
     catch (e) { $('sq-msg').textContent = e.message; }
   });
+  async function loadEmail() {
+    const e = await api('/email');
+    $('em-status').textContent = e.ready ? `New orders are emailed to ${e.to}.` : 'Not set up yet: orders still save here, but no email goes out.';
+    $('em-test').disabled = !e.ready;
+  }
+  $('em-test').addEventListener('click', async () => {
+    $('em-msg').textContent = 'Sending…';
+    try { const r = await api('/email/test', { method: 'POST' }); $('em-msg').textContent = `Sent to ${r.to}. Check that inbox (and Junk the first time).`; }
+    catch (e) { $('em-msg').textContent = e.message; }
+  });
   async function loadSettings() {
-    loadSquare();
+    loadSquare(); loadEmail();
     const { settings } = await api('/overview');
     for (const [id, k] of Object.entries(priceFields)) $(id).value = (Number(settings[k]) / 100).toFixed(2);
     $('s-open').checked = settings.orders_open !== '0';

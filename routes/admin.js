@@ -1,6 +1,7 @@
 // Owner dashboard: login, orders, flavors, route stops, prices/settings.
 const path = require('path');
 const express = require('express');
+const mailer = require('../lib/mailer');
 const { db, getSettings, setSetting } = require('../db');
 const { passwordOk, setSession, clearSession, requireAdmin, isAuthed } = require('../lib/auth');
 const { currentCycle } = require('../lib/schedule');
@@ -127,6 +128,13 @@ router.patch('/api/admin/stops/:id', (req, res) => {
 router.delete('/api/admin/stops/:id', (req, res) => {
   db.prepare('DELETE FROM stops WHERE id = ?').run(Number(req.params.id));
   res.json({ ok: true });
+});
+
+// Order alert emails: status and a test send.
+router.get('/api/admin/email', (req, res) => res.json(mailer.emailStatus()));
+router.post('/api/admin/email/test', async (req, res) => {
+  try { await mailer.sendTestEmail(); res.json({ ok: true, to: process.env.NOTIFY_EMAIL }); }
+  catch (e) { res.status(400).json({ error: 'Email failed: ' + e.message }); }
 });
 
 // Square: status and a $1 live test link (refund it in Square afterwards).
