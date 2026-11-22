@@ -55,8 +55,11 @@
       const withPhoto = m.flavors.filter((f) => f.photo);
       const rest = m.flavors.filter((f) => !f.photo);
       board.innerHTML =
-        (withPhoto.length ? `<div class="flavor-photos">${withPhoto.map((f) => `<figure class="fcard"><img src="${esc(f.photo)}" alt="${esc(f.name)} mini cheesecakes" loading="lazy"><figcaption>${esc(f.name)}${tags(f)}</figcaption></figure>`).join('')}</div>` : '') +
+        (withPhoto.length ? `<div class="flavor-photos${withPhoto.length > 8 ? ' collapsed' : ''}">${withPhoto.map((f) => `<figure class="fcard"><img src="${esc(f.photo)}" alt="${esc(f.name)} mini cheesecakes" loading="lazy"><figcaption>${esc(f.name)}${tags(f)}</figcaption></figure>`).join('')}</div>` +
+          (withPhoto.length > 8 ? `<p class="center show-all-wrap"><button type="button" class="btn ghost show-all">See all ${withPhoto.length} flavor photos</button></p>` : '') : '') +
         (rest.length ? `${withPhoto.length ? '<h3 class="more-flavors">More flavors</h3>' : ''}<div class="chips">${rest.map((f) => `<span class="chip">${esc(f.name)}${tags(f)}</span>`).join('')}</div>` : '');
+      const all = board.querySelector('.show-all');
+      if (all) all.addEventListener('click', () => { board.querySelector('.flavor-photos').classList.remove('collapsed'); all.parentElement.remove(); });
     }
   }).catch(() => {});
 

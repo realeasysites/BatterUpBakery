@@ -107,6 +107,8 @@ section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
 .flavor-board .chips { display: flex; flex-wrap: wrap; gap: .55rem; }
 .flavor-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; margin-bottom: 1.6rem; }
 .fcard { margin: 0; background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 6px 18px rgba(51,4,58,.06); transition: transform .2s; }
+.flavor-photos.collapsed .fcard:nth-child(n+13) { display: none; }
+.show-all-wrap { margin: -.4rem 0 1.6rem; }
 .fcard:hover { transform: translateY(-3px); }
 .fcard img { width: 100%; aspect-ratio: 3 / 4; height: auto; object-fit: cover; object-position: center 40%; }
 .fcard figcaption { padding: .6rem .8rem .7rem; font-weight: 700; font-size: .95rem; display: flex; align-items: center; gap: .4em; flex-wrap: wrap; }
@@ -275,6 +277,7 @@ label { font-weight: 600; font-size: .92rem; display: block; margin-bottom: .35r
   .add-row .qty { width: 90px; }
   .add-row .btn { flex: 1; justify-content: center; }
   .flavor-photos { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .flavor-photos.collapsed .fcard:nth-child(n+9) { display: none; }
   body { font-size: 16px; }
   .brand img { width: 58px; height: 58px; }
   .brand span { display: none; }
