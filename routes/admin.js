@@ -149,6 +149,10 @@ router.post('/api/admin/square/test', async (req, res) => {
     res.json({ ok: true, url: link.url, order_id: link.orderId });
   } catch (e) { res.status(400).json({ error: 'Square said: ' + e.message }); }
 });
+router.get('/api/admin/square/recent', async (req, res) => {
+  try { res.json({ payments: await square.recentPayments() }); }
+  catch (e) { res.status(400).json({ error: 'Square said: ' + e.message }); }
+});
 router.get('/api/admin/square/test/:orderId', async (req, res) => {
   try { res.json({ paid: await square.isPaid(req.params.orderId) }); }
   catch (e) { res.status(400).json({ error: 'Square said: ' + e.message }); }
