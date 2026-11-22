@@ -100,6 +100,14 @@
           <div><label for="email">Email <span class="muted">(optional, for a receipt)</span></label><input id="email" type="email" autocomplete="email"></div>
           <div><label for="notes">Notes <span class="muted">(optional)</span></label><input id="notes" placeholder="Birthday, allergies, best time to reach you…"></div>
         </div>
+        <div id="pay-choice" hidden>
+          <h2 style="margin-top:1.6rem">4. How do you want to pay?</h2>
+          <div class="ways-pick" role="group" aria-label="Payment" style="grid-template-columns:1fr 1fr">
+            <button type="button" class="pack-opt" data-pay="card" aria-pressed="true"><b>Pay now by card</b><span>Secure checkout</span><small>Card, Apple Pay, Google Pay, Cash App</small></button>
+            <button type="button" class="pack-opt" data-pay="later" aria-pressed="false"><b>Pay at pickup</b><span>No payment now</span><small>Pay when you get your order</small></button>
+          </div>
+          <p class="hint" id="pay-hint">You'll go to Square's secure checkout to pay, then come right back here.</p>
+        </div>
         <div class="sr-only" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" tabindex="-1" autocomplete="off"></div>
       </form>
     </div>

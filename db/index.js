@@ -91,6 +91,12 @@ CREATE TABLE IF NOT EXISTS ws_invoices (
 CREATE INDEX IF NOT EXISTS idx_ws_inv_date ON ws_invoices(invoice_date);
 `);
 
+// Columns added after launch prep: online card payments through Square.
+const orderCols = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
+for (const [col, type] of [['pay_method', "TEXT NOT NULL DEFAULT 'later'"], ['square_order_id', 'TEXT'], ['pay_url', 'TEXT'], ['paid', 'INTEGER NOT NULL DEFAULT 0']]) {
+  if (!orderCols.includes(col)) db.exec(`ALTER TABLE orders ADD COLUMN ${col} ${type}`);
+}
+
 const DEFAULT_SETTINGS = {
   price_whole: '5940',
   price_gf_addon: '700',

@@ -259,6 +259,15 @@
         <p class="muted">Leave blank to show this week's order cutoff.</p>
       </div>
     </div>
+    <div class="card settings" id="sq-card">
+      <h3>Card payments (Square)</h3>
+      <p class="meta" id="sq-status">Checking…</p>
+      <div class="bar" style="margin-top:.6rem">
+        <button class="btn small" id="sq-test">Make a $1 test payment</button>
+        <button class="pill" id="sq-check" hidden>Did the $1 go through?</button>
+      </div>
+      <p class="muted" id="sq-msg"></p>
+    </div>
     <div class="err" id="set-err" hidden></div><div class="ok" id="set-ok" hidden>Saved.</div>
     <button class="btn" id="save-settings" style="margin-top:1rem">Save prices &amp; settings</button>
   </section>
@@ -333,6 +342,7 @@
         <div class="head">
           <div>
             <span class="code">${esc(o.code)}</span> <span class="pill-status">${esc(o.status)}</span>
+            ${o.paid ? '<span class="pill-status" style="background:#e9f4d2;color:#3c5410">Paid</span>' : o.pay_method === 'card' ? '<span class="pill-status" style="background:#fde8ea;color:#8a1424">Card, not paid yet</span>' : '<span class="pill-status" style="background:#fff;border:1px solid var(--line);color:var(--muted)">Pay at pickup</span>'}
             <h3>${esc(o.name)}</h3>
             <div class="meta"><a href="tel:${esc(o.phone)}">${esc(o.phone)}</a> · <a href="sms:${esc(o.phone)}">Text</a>${o.email ? ` · <a href="mailto:${esc(o.email)}">${esc(o.email)}</a>` : ''}</div>
           </div>
@@ -345,9 +355,11 @@
           <select data-status="${o.id}" aria-label="Status">
             ${['new', 'confirmed', 'ready', 'done', 'cancelled'].map((s) => `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('')}
           </select>
+          <button class="pill" data-paid="${o.id}" data-v="${o.paid ? 0 : 1}">${o.paid ? 'Mark not paid' : 'Mark paid'}</button>
           <button class="del" data-del="${o.id}">Delete</button>
         </div>
       </div>`).join('');
+    document.querySelectorAll('[data-paid]').forEach((b) => b.addEventListener('click', async () => { await api('/orders/' + b.dataset.paid, { method: 'PATCH', body: { paid: b.dataset.v === '1' } }); flash('Saved'); loadOrders(); }));
     document.querySelectorAll('[data-status]').forEach((s) => s.addEventListener('change', async () => { await api('/orders/' + s.dataset.status, { method: 'PATCH', body: { status: s.value } }); loadOrders(); }));
     document.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => {
       const o = orders.find((x) => x.id === Number(b.dataset.del));
@@ -439,7 +451,27 @@
 
   // ---------- settings ----------
   const priceFields = { 'p-whole': 'price_whole', 'p-gf': 'price_gf_addon', 'p-m6': 'price_mini6', 'p-m105': 'price_mini10x5', 'p-m1010': 'price_mini10x10' };
+  let sqTestOrder = null;
+  async function loadSquare() {
+    const q = await api('/square');
+    $('sq-status').textContent = !q.configured ? 'Not connected yet.' : q.live ? 'Connected and ON: customers can pay by card when they order.' : 'Connected, but turned OFF for customers until the $1 test passes.';
+    $('sq-test').disabled = !q.configured;
+  }
+  $('sq-test').addEventListener('click', async () => {
+    $('sq-msg').textContent = 'Opening Square checkout…';
+    try {
+      const r = await api('/square/test', { method: 'POST' });
+      sqTestOrder = r.order_id; window.open(r.url, '_blank');
+      $('sq-msg').textContent = 'Pay the $1 in the new tab, then come back and tap "Did the $1 go through?". Refund it afterwards in your Square dashboard.';
+      $('sq-check').hidden = false;
+    } catch (e) { $('sq-msg').textContent = e.message; }
+  });
+  $('sq-check').addEventListener('click', async () => {
+    try { const r = await api('/square/test/' + encodeURIComponent(sqTestOrder)); $('sq-msg').textContent = r.paid ? 'Yes! The $1 reached your Square. Card payments work.' : 'Not yet. If you finished paying, wait a few seconds and tap again.'; }
+    catch (e) { $('sq-msg').textContent = e.message; }
+  });
   async function loadSettings() {
+    loadSquare();
     const { settings } = await api('/overview');
     for (const [id, k] of Object.entries(priceFields)) $(id).value = (Number(settings[k]) / 100).toFixed(2);
     $('s-open').checked = settings.orders_open !== '0';

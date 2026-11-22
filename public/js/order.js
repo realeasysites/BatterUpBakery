@@ -3,7 +3,7 @@
   const { money, esc, menu, stops, short } = window.BUB;
   const $ = (id) => document.getElementById(id);
   const builder = $('builder');
-  const state = { pack: 'whole', way: 'route', cart: [], whole: { flavor: null, gf: false }, picks: {} };
+  const state = { pack: 'whole', way: 'route', pay: 'card', cart: [], whole: { flavor: null, gf: false }, picks: {} };
   let M = null; // menu data
   let flavorsById = new Map();
 
@@ -166,7 +166,22 @@
     document.querySelectorAll('[data-way]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     document.querySelectorAll('[data-show]').forEach((el) => (el.hidden = el.dataset.show !== state.way));
     shipCheck();
+    updatePayUI();
   }));
+  // Pay now by card (Square) or pay at pickup. Shipping orders always pay later (fee not known yet).
+  document.querySelectorAll('[data-pay]').forEach((b) => b.addEventListener('click', () => {
+    state.pay = b.dataset.pay;
+    document.querySelectorAll('[data-pay]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    updatePayUI();
+  }));
+  function updatePayUI() {
+    if (!M) return;
+    const box = $('pay-choice');
+    box.hidden = !M.card_payments || state.way === 'ship';
+    $('pay-hint').textContent = state.pay === 'card' ? "You'll go to Square's secure checkout to pay, then come right back here." : 'Pay with cash or card when you get your order.';
+    const placeBtn = $('place');
+    if (!placeBtn.dataset.busy) placeBtn.textContent = !box.hidden && state.pay === 'card' ? 'Continue to payment' : 'Place order';
+  }
   function shipCheck() {
     const bad = state.way === 'ship' && state.cart.some((it) => it.type === 'whole');
     showErr(bad ? "Whole cheesecakes can't be shipped. Choose pickup or a route meet-up, or remove the whole cheesecake to ship your mini packs." : '');
@@ -207,7 +222,8 @@
       pickup_date: $('pickup-day').value,
       ship_address: $('ship-address').value,
       name: $('name').value, phone: $('phone').value, email: $('email').value, notes: $('notes').value,
-      website: $('website').value
+      website: $('website').value,
+      pay: M.card_payments && state.way !== 'ship' ? state.pay : 'later'
     };
     if (state.way === 'route' && !body.stop_id) return showErr('Please choose a meet-up spot on our route.');
     if (state.way === 'ship' && state.cart.some((it) => it.type === 'whole')) return showErr("Whole cheesecakes can't be shipped. Choose pickup or a route meet-up, or remove the whole cheesecake to ship your mini packs.");
@@ -215,22 +231,36 @@
     if (!body.name.trim()) return showErr('Please enter your name.');
     if (body.phone.replace(/\D/g, '').length < 10) return showErr('Please enter a phone number we can reach you at.');
     const btn = $('place');
-    btn.disabled = true; btn.textContent = 'Placing order…';
+    btn.disabled = true; btn.dataset.busy = '1'; btn.textContent = body.pay === 'card' ? 'Opening secure checkout…' : 'Placing order…';
     try {
       const r = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Something went wrong.');
       state.cart = []; save();
+      if (data.pay_url) { window.location.href = data.pay_url; return; }   // off to Square's checkout
       $('order-app').hidden = true;
       $('done-code').textContent = data.code;
-      $('done-line').textContent = `${data.fulfillment_label}. Total ${money(data.total_cents)}${state.way === 'ship' ? ' plus shipping' : ''}.`;
+      $('done-line').textContent = `${data.fulfillment_label}. Total ${money(data.total_cents)}${state.way === 'ship' ? ' plus shipping' : ''}.${data.pay_error ? ' ' + data.pay_error : ''}`;
       $('order-done').hidden = false;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
       showErr(e.message);
-      btn.disabled = false; btn.textContent = 'Place order';
+      btn.disabled = false; delete btn.dataset.busy; updatePayUI();
     }
   });
+
+  // Back from Square's checkout: confirm the payment went through.
+  async function showPaidReturn(code) {
+    $('order-app').hidden = true; $('order-done').hidden = false;
+    $('done-code').textContent = code;
+    $('done-line').textContent = 'Checking your payment…';
+    let paid = false;
+    for (let i = 0; i < 4 && !paid; i++) {
+      try { paid = (await (await fetch('/api/orders/' + encodeURIComponent(code) + '/paid')).json()).paid; } catch (e) {}
+      if (!paid) await new Promise((r) => setTimeout(r, 1500));
+    }
+    $('done-line').textContent = paid ? 'Payment received. Thank you! We\'ll see you soon.' : "We got your order. If your payment didn't finish, no worries, you can pay at pickup.";
+  }
 
   // ---------- boot ----------
   Promise.all([menu, stops]).then(([m, s]) => {
@@ -245,5 +275,8 @@
     else renderBuilder();
     setupFulfillment(s.stops);
     renderCart();
+    updatePayUI();
+    const paidCode = new URLSearchParams(location.search).get('paid');
+    if (paidCode) showPaidReturn(paidCode);
   }).catch(() => showErr('Couldn\'t load the menu. Please refresh the page.'));
 })();

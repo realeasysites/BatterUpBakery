@@ -4,6 +4,7 @@ const { db, getSettings } = require('../db');
 const { currentCycle } = require('../lib/schedule');
 const { productsWithPrices, priceItems, OrderError, clean, newCode } = require('../lib/orders');
 const { sendOrderEmails } = require('../lib/mailer');
+const square = require('../lib/square');
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ router.get('/menu', (req, res) => {
     flavors: activeFlavors(),
     ...productsWithPrices(s),
     orders_open: s.orders_open !== '0',
+    card_payments: square.enabled(),
     announcement: s.announcement || '',
     cycle: currentCycle()
   });
@@ -103,19 +105,51 @@ router.post('/orders', async (req, res) => {
       throw new OrderError('Please choose pickup, route meet-up or shipping.');
     }
 
+    // Card payment now (Square) for pickup/route orders; shipping is paid later once the fee is known.
+    const payCard = b.pay === 'card' && square.enabled() && fulfillment !== 'ship';
     const code = newCode();
-    db.prepare(`INSERT INTO orders (code, name, phone, email, fulfillment, fulfill_date, stop_id, stop_label, ship_address, items_json, total_cents, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-      .run(code, name, phone, email || null, fulfillment, fulfill_date, stop_id, stop_label, ship_address, JSON.stringify(items), total_cents, notes || null);
+    db.prepare(`INSERT INTO orders (code, name, phone, email, fulfillment, fulfill_date, stop_id, stop_label, ship_address, items_json, total_cents, notes, pay_method)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(code, name, phone, email || null, fulfillment, fulfill_date, stop_id, stop_label, ship_address, JSON.stringify(items), total_cents, notes || null, payCard ? 'card' : 'later');
 
     recordOrder(req.ip);
-    const order = { code, name, phone, email, notes, fulfillment, fulfillment_label, items, total_cents };
+    const order = { code, name, phone, email, notes, fulfillment, fulfillment_label, items, total_cents, pay_method: payCard ? 'card' : 'later' };
+    let pay_url = null, pay_error = null;
+    if (payCard) {
+      try {
+        const site = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
+        const link = await square.createPaymentLink(order, site);
+        pay_url = link.url;
+        db.prepare('UPDATE orders SET square_order_id = ?, pay_url = ? WHERE code = ?').run(link.orderId, link.url, code);
+      } catch (e) {
+        console.error(`order ${code}: Square payment link failed: ${e.message}`);
+        db.prepare("UPDATE orders SET pay_method = 'later' WHERE code = ?").run(code);
+        order.pay_method = 'later';
+        pay_error = "Your order is in, but online payment isn't working right now. You can pay at pickup or delivery.";
+      }
+    }
     sendOrderEmails(order); // don't make the customer wait on email
-    res.json({ ok: true, code, total_cents, fulfillment_label });
+    res.json({ ok: true, code, total_cents, fulfillment_label, pay_url, pay_error });
   } catch (e) {
     if (e instanceof OrderError) return res.status(400).json({ error: e.message });
     console.error('order failed', e);
     res.status(500).json({ error: 'Something went wrong. Please call or message us to order.' });
+  }
+});
+
+// After paying on Square, the customer comes back here; we ask Square whether it went through.
+router.get('/orders/:code/paid', async (req, res) => {
+  try {
+    const o = db.prepare('SELECT code, paid, square_order_id FROM orders WHERE code = ?').get(String(req.params.code).toUpperCase());
+    if (!o) return res.status(404).json({ error: 'Order not found' });
+    if (!o.paid && o.square_order_id && square.enabled()) {
+      try { if (await square.isPaid(o.square_order_id)) { db.prepare('UPDATE orders SET paid = 1 WHERE code = ?').run(o.code); o.paid = 1; } }
+      catch (e) { console.error(`order ${o.code}: payment check failed: ${e.message}`); }
+    }
+    res.json({ code: o.code, paid: !!o.paid });
+  } catch (e) {
+    console.error('payment status check failed', e);
+    res.status(500).json({ error: 'Could not check payment' });
   }
 });
 

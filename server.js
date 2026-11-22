@@ -27,6 +27,14 @@ app.get('/healthz', (req, res) => res.send('ok'));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'], maxAge: '1h' }));
 app.use((req, res) => res.status(404).sendFile(path.join(__dirname, 'public', '404.html')));
 
+// Safety net: a failed request should never take the whole site down.
+app.use((err, req, res, next) => {
+  console.error('request failed', req.method, req.originalUrl, err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: 'Something went wrong. Please try again or call (207) 588-7628.' });
+});
+process.on('unhandledRejection', (e) => console.error('unhandled error', e));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Batter Up Bakery site on port ${PORT}`);

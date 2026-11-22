@@ -5,6 +5,7 @@ const { db, getSettings, setSetting } = require('../db');
 const { passwordOk, setSession, clearSession, requireAdmin, isAuthed } = require('../lib/auth');
 const { currentCycle } = require('../lib/schedule');
 const { clean } = require('../lib/orders');
+const square = require('../lib/square');
 
 const router = express.Router();
 const VIEWS = path.join(__dirname, '..', 'views');
@@ -39,7 +40,14 @@ router.get('/api/admin/overview', (req, res) => {
 });
 
 // Orders
-router.get('/api/admin/orders', (req, res) => {
+router.get('/api/admin/orders', async (req, res) => {
+  // Refresh "paid" for recent card orders that haven't shown as paid yet.
+  if (square.enabled()) {
+    const pending = db.prepare("SELECT code, square_order_id FROM orders WHERE pay_method = 'card' AND paid = 0 AND square_order_id IS NOT NULL AND created_at >= datetime('now', '-14 days') LIMIT 25").all();
+    await Promise.allSettled(pending.map(async (o) => {
+      try { if (await square.isPaid(o.square_order_id)) db.prepare('UPDATE orders SET paid = 1 WHERE code = ?').run(o.code); } catch (e) { /* try again next load */ }
+    }));
+  }
   const { from, to, status } = req.query;
   let sql = 'SELECT * FROM orders WHERE 1=1';
   const args = [];
@@ -52,6 +60,10 @@ router.get('/api/admin/orders', (req, res) => {
 });
 const STATUSES = ['new', 'confirmed', 'ready', 'done', 'cancelled'];
 router.patch('/api/admin/orders/:id', (req, res) => {
+  if (req.body && req.body.paid !== undefined) {
+    db.prepare('UPDATE orders SET paid = ? WHERE id = ?').run(req.body.paid ? 1 : 0, Number(req.params.id));
+    if (req.body.status === undefined) return res.json({ ok: true });
+  }
   const status = req.body && req.body.status;
   if (!STATUSES.includes(status)) return res.status(400).json({ error: 'Bad status' });
   db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, Number(req.params.id));
@@ -115,6 +127,23 @@ router.patch('/api/admin/stops/:id', (req, res) => {
 router.delete('/api/admin/stops/:id', (req, res) => {
   db.prepare('DELETE FROM stops WHERE id = ?').run(Number(req.params.id));
   res.json({ ok: true });
+});
+
+// Square: status and a $1 live test link (refund it in Square afterwards).
+router.get('/api/admin/square', (req, res) => {
+  res.json({ configured: square.configured(), live: square.enabled() });
+});
+router.post('/api/admin/square/test', async (req, res) => {
+  if (!square.configured()) return res.status(400).json({ error: 'Square codes are not set up yet.' });
+  try {
+    const site = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
+    const link = await square.createTestLink(site);
+    res.json({ ok: true, url: link.url, order_id: link.orderId });
+  } catch (e) { res.status(400).json({ error: 'Square said: ' + e.message }); }
+});
+router.get('/api/admin/square/test/:orderId', async (req, res) => {
+  try { res.json({ paid: await square.isPaid(req.params.orderId) }); }
+  catch (e) { res.status(400).json({ error: 'Square said: ' + e.message }); }
 });
 
 // Prices and settings
