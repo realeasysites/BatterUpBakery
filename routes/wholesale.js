@@ -211,7 +211,7 @@ router.post('/api/admin/wholesale/invoices/:id/email', async (req, res) => {
 const money = (c) => '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 function renderInvoice(inv, withPrintButton) {
-  const site = process.env.SITE_URL || 'https://batterupbakery.onrender.com';
+  const site = process.env.SITE_URL || 'https://batterupbakerymaine.com';
   const dt = d(inv.invoice_date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'long', day: 'numeric', year: 'numeric' });
   const rows = inv.lines.map((l) => `<tr><td>${esc(l.flavor)}</td><td style="text-align:right">${l.qty}</td><td style="text-align:right">${money(l.unit_cents)}</td><td style="text-align:right">${money(l.qty * l.unit_cents)}</td></tr>`).join('');
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Invoice ${inv.number} | Batter Up Bakery</title>

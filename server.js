@@ -7,6 +7,15 @@ const app = express();
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
+// Send anyone on the old onrender.com address to the real domain (set CANONICAL_HOST on Render).
+app.use((req, res, next) => {
+  const canon = process.env.CANONICAL_HOST;
+  if (canon && req.hostname && req.hostname !== canon && req.hostname.endsWith('.onrender.com') && req.method === 'GET' && req.path !== '/healthz') {
+    return res.redirect(301, `https://${canon}${req.originalUrl}`);
+  }
+  next();
+});
+
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
