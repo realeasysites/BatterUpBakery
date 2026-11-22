@@ -106,6 +106,7 @@ for (const [col, type] of [['pay_method', 'TEXT'], ['check_no', 'TEXT'], ['paid_
 }
 
 const DEFAULT_SETTINGS = {
+  card_payments: '0',
   price_whole: '5940',
   price_gf_addon: '700',
   price_mini6: '3880',

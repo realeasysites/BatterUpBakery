@@ -141,6 +141,11 @@ router.post('/api/admin/email/test', async (req, res) => {
 router.get('/api/admin/square', (req, res) => {
   res.json({ configured: square.configured(), live: square.enabled() });
 });
+router.put('/api/admin/square', express.json(), (req, res) => {
+  if (!square.configured()) return res.status(400).json({ error: 'Square is not connected yet.' });
+  setSetting('card_payments', req.body && req.body.on ? '1' : '0');
+  res.json({ configured: true, live: square.enabled() });
+});
 router.post('/api/admin/square/test', async (req, res) => {
   if (!square.configured()) return res.status(400).json({ error: 'Square codes are not set up yet.' });
   try {
