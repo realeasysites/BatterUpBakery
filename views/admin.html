@@ -133,6 +133,7 @@
       <div class="bar">
         <button class="btn small" id="ws-repeat">Repeat last week's invoices</button>
         <button class="btn small ghost" id="ws-new">+ New invoice</button>
+        <a class="pill" id="ws-printall" target="_blank" style="text-decoration:none;color:inherit">Print all this week</a>
       </div>
       <div class="err" id="ws-err" hidden></div><div class="ok" id="ws-ok" hidden></div>
       <div id="ws-week-sum" class="muted" style="margin-bottom:.6rem"></div>
@@ -595,6 +596,7 @@
   function wsMsg(ok, err) { $('ws-ok').textContent = ok || ''; $('ws-ok').hidden = !ok; $('ws-err').textContent = err || ''; $('ws-err').hidden = !err; }
   async function wsList() {
     $('ws-week-label').textContent = `Week of ${day(wsWeek)}`;
+    $('ws-printall').href = '/admin/invoices/print?week=' + wsWeek;
     wsInvoices = (await api('/wholesale/invoices?week=' + wsWeek)).invoices;
     const sum = wsInvoices.reduce((t, i) => t + i.total_cents, 0);
     const q = qtys(wsInvoices);

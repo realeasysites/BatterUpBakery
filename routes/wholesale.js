@@ -232,6 +232,19 @@ ${inv.status === 'paid' ? `<p class="tot" style="font-size:15px;color:#3c5410">P
 ${inv.notes ? `<p><b>Notes:</b> ${esc(inv.notes)}</p>` : ''}
 <p class="muted" style="margin-top:30px">Thank you for supporting our small family business!</p></div></body></html>`;
 }
+// Print a whole week of invoices at once: one invoice per page.
+router.get('/admin/invoices/print', requireAdmin, (req, res) => {
+  const [from, to] = weekOf(isoDate(req.query.week) ? req.query.week : todayMaine());
+  const invs = db.prepare(withCustomer + ' WHERE i.invoice_date BETWEEN ? AND ? ORDER BY i.invoice_date, c.name').all(from, to).map(parse);
+  if (!invs.length) return res.send('<p style="font-family:Arial;padding:30px">No invoices this week.</p>');
+  const pages = invs.map((inv) => renderInvoice(inv, false));
+  const head = pages[0].slice(0, pages[0].indexOf('<body>'));
+  const bodies = pages.map((p) => p.slice(p.indexOf('<body>') + 6, p.indexOf('</body>')));
+  res.send(head.replace(/<title>[^<]*<\/title>/, `<title>Invoices, week of ${from} | Batter Up Bakery</title>`).replace('</style>', '.page{page-break-after:always;break-after:page;padding-bottom:30px}.page:last-child{page-break-after:auto;break-after:auto}@media screen{.page{border-bottom:2px dashed #ddd;margin-bottom:30px}}</style>') +
+    `<body><p class="noprint" style="max-width:720px;margin:0 auto 20px"><button class="btn" onclick="print()">Print all ${invs.length} invoices</button></p>` +
+    bodies.map((b) => `<div class="page">${b}</div>`).join('') + '</body></html>');
+});
+
 router.get('/admin/invoice/:id', requireAdmin, (req, res) => {
   const inv = parse(db.prepare(withCustomer + ' WHERE i.id = ?').get(Number(req.params.id)));
   if (!inv) return res.status(404).send('Invoice not found');

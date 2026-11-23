@@ -77,7 +77,7 @@
     if (notice) {
       if (!m.orders_open) notice.innerHTML = 'Online ordering is paused right now. <b>Message us on Facebook</b> or call (207) 588-7628.';
       else if (m.announcement) notice.innerHTML = esc(m.announcement);
-      else notice.innerHTML = `Order by <b>${esc(c.cutoff.label)}</b> for delivery, pickup or shipping the following week.`;
+      else notice.innerHTML = `Order by <b>${esc(c.cutoff.label)}</b> for delivery, pickup or shipping. It's yours to enjoy the following week.`;
     }
 
     // Flavor board
