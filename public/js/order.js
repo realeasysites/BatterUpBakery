@@ -211,8 +211,10 @@
         : 'We\'ll meet you there on delivery day and confirm the time.';
     });
     $('pickup-day').innerHTML = c.pickup.map((d) => `<option value="${d.date}">${esc(d.label)}, 9 AM to 5 PM</option>`).join('');
-    $('ship-hint').textContent = `Mini packs only (whole cheesecakes can't be shipped). Ships out ${c.ship.label} by UPS (24 to 48 hours in Maine). Flat ${money(M.ship_cents || 0)} shipping.`;
-    $('cycle-line').innerHTML = `Orders placed now are for the week of <b>${esc(short(c.route.Tuesday.date))}</b>. This week's cutoff is <b>${esc(c.cutoff.label)}</b>. We'll confirm your order by phone, text or email.`;
+    $('ship-hint').textContent = `Mini packs only, shipped without a gift box (whole cheesecakes can't be shipped). Ships out ${c.ship.label} by UPS (24 to 48 hours in Maine). Flat ${money(M.ship_cents || 0)} shipping.`;
+    const tue = new Date(c.route.Tuesday.date + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', month: 'short', day: 'numeric' });
+    $('cycle-h').textContent = `Please order by ${c.cutoff.label.replace(' at ', ' @ ')}`;
+    $('cycle-line').innerHTML = `to receive your cheesecake the week of <b>${esc(tue)}</b>. Choose how and what day below. We'll confirm your order by phone, text or email.`;
   }
 
   // ---------- place order ----------

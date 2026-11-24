@@ -76,7 +76,8 @@ router.post('/orders', async (req, res) => {
     const notes = clean(b.notes, 600);
     if (!name) throw new OrderError('Please enter your name.');
     if (phone.replace(/\D/g, '').length < 10) throw new OrderError('Please enter a phone number we can reach you at.');
-    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new OrderError('That email address doesn\'t look right.');
+    if (!email) throw new OrderError('Please enter your email so we have a backup way to reach you.');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new OrderError('That email address doesn\'t look right.');
 
     const flavorsById = new Map(activeFlavors().map((f) => [f.id, f]));
     const priced = priceItems(b.items, flavorsById, s);

@@ -48,8 +48,8 @@
 <main>
   <div class="wrap page-hero">
     <span class="eyebrow">Order online</span>
-    <h1 style="font-size:clamp(2rem,4vw,3rem)">Build your cheesecake order</h1>
-    <p class="lede" id="cycle-line">Order by Saturday at 6 PM for next week. We'll confirm your order by phone, text or email.</p>
+    <h1 style="font-size:clamp(1.8rem,3.6vw,2.7rem)" id="cycle-h">Please order by Saturday at 6 PM</h1>
+    <p class="lede" id="cycle-line">to receive your cheesecake the following week. Choose how and what day below. We'll confirm your order by phone, text or email.</p>
   </div>
   <div class="wrap order-layout" id="order-app">
     <div>
@@ -73,7 +73,7 @@
         <div class="ways-pick" role="group" aria-label="How to get it">
           <button type="button" class="pack-opt" data-way="route" aria-pressed="true"><b>Route meet-up</b><span>Free</span><small>Tuesday or Wednesday</small></button>
           <button type="button" class="pack-opt" data-way="pickup" aria-pressed="false"><b>BUB Shed pickup</b><span>Free</span><small>Litchfield, Wed to Sat</small></button>
-          <button type="button" class="pack-opt" data-way="ship" aria-pressed="false"><b>Ship in Maine</b><span data-ship-price>$19.95</span><small>Mini packs only</small></button>
+          <button type="button" class="pack-opt" data-way="ship" aria-pressed="false"><b>Ship in Maine</b><span data-ship-price>$19.95</span><small>Mini packs only (no gift box)</small></button>
         </div>
         <div data-show="route">
           <label for="stop">Meet-up spot</label>
@@ -88,7 +88,7 @@
         <div data-show="ship" hidden>
           <label for="ship-address">Shipping address (Maine only)</label>
           <textarea id="ship-address" rows="3" placeholder="Street, town, ME, ZIP" autocomplete="street-address"></textarea>
-          <p class="hint" id="ship-hint">Mini packs only (whole cheesecakes can't be shipped). Ships out Wednesday by UPS. Flat-rate shipping.</p>
+          <p class="hint" id="ship-hint">Mini packs only, shipped without a gift box (whole cheesecakes can't be shipped). Ships out Wednesday by UPS. Flat-rate shipping.</p>
         </div>
 
         <h2 style="margin-top:1.6rem">3. Your info</h2>
@@ -97,7 +97,7 @@
           <div><label for="phone">Phone</label><input id="phone" type="tel" autocomplete="tel" required></div>
         </div>
         <div class="row">
-          <div><label for="email">Email <span class="muted">(optional, for a receipt)</span></label><input id="email" type="email" autocomplete="email"></div>
+          <div><label for="email">Email <span class="muted">(a backup way to reach you)</span></label><input id="email" type="email" autocomplete="email" required></div>
           <div><label for="notes">Notes <span class="muted">(optional)</span></label><input id="notes" placeholder="Birthday, allergies, best time to reach you…"></div>
         </div>
         <div id="pay-choice" hidden>
