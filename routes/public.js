@@ -28,7 +28,7 @@ function flavorPhotos() {
 
 function activeFlavors() {
   const photos = flavorPhotos();
-  return db.prepare('SELECT id, name, gf, seasonal FROM flavors WHERE active = 1 ORDER BY sort, name').all()
+  return db.prepare('SELECT id, name, gf, seasonal FROM flavors WHERE active = 1 ORDER BY name COLLATE NOCASE').all()
     .map((f) => ({ ...f, photo: photos[slug(f.name)] || null }));
 }
 function activeStops() {

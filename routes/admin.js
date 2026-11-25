@@ -76,7 +76,7 @@ router.delete('/api/admin/orders/:id', (req, res) => {
 });
 
 // Flavors
-router.get('/api/admin/flavors', (req, res) => res.json({ flavors: db.prepare('SELECT * FROM flavors ORDER BY sort, name').all() }));
+router.get('/api/admin/flavors', (req, res) => res.json({ flavors: db.prepare('SELECT * FROM flavors ORDER BY name COLLATE NOCASE').all() }));
 router.post('/api/admin/flavors', (req, res) => {
   const name = clean(req.body.name, 60);
   if (!name) return res.status(400).json({ error: 'Name required' });
