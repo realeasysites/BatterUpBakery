@@ -121,7 +121,9 @@ section { padding: clamp(3.5rem, 7vw, 6rem) 0; }
 /* Size cards */
 .sizes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; }
 .size { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
-.size img { aspect-ratio: 4 / 3; height: auto; object-fit: cover; width: 100%; }
+.size img { aspect-ratio: 1 / 1; height: auto; object-fit: cover; width: 100%; }
+/* Pack photos show the whole box (every flavor visible), framed on the box's dark lining. */
+.size img.pack { object-fit: contain; background: #2a1a30; }
 .size .body { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; flex: 1; }
 .size .price { font-family: var(--serif); font-size: 1.9rem; color: var(--plum); font-weight: 700; margin: .1rem 0 .3rem; }
 .size p { font-size: .94rem; color: var(--muted); flex: 1; }
