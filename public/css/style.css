@@ -307,3 +307,8 @@ section:not(.band) h1, section:not(.band) h2, section:not(.band) h3 {
   .lede, .section-head p { font-weight: 600; color: #2b1630; }
   .stat span { color: #2b1630; }
 }
+
+/* "Homemade fresh, never frozen." under the home page headline */
+.fresh-line { display: inline-block; margin: .2rem 0 .9rem; padding: .35em .95em; background: var(--plum); color: #fff; border-radius: 999px; font-weight: 700; letter-spacing: .02em; text-shadow: none !important; }
+/* Must-meet-the-driver note on the order page */
+.notice-box { margin: .6rem 0 0; padding: .7rem .9rem; border-radius: 12px; background: #fff4e5; border: 1px solid #f1c98a; color: #5a3a00; font-size: .92rem; text-shadow: none; }

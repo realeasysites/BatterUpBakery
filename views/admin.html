@@ -430,7 +430,7 @@
     const wholes = {}, minis = {};
     for (const o of live) for (const i of o.items) {
       for (const [name, n] of Object.entries(i.counts || {})) {
-        if (i.type === 'whole') { const k = name + (i.gf ? ' (GF)' : ''); wholes[k] = (wholes[k] || 0) + i.qty; }
+        if (i.type === 'whole') { const k = name + (i.gf ? (i.crust === 'oreo' ? ' (GF Oreo crust)' : ' (GF graham crust)') : ''); wholes[k] = (wholes[k] || 0) + i.qty; }
         else minis[name] = (minis[name] || 0) + n * i.qty;
       }
     }

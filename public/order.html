@@ -79,6 +79,7 @@
           <label for="stop">Meet-up spot</label>
           <select id="stop"><option value="">Choose a stop on our route…</option></select>
           <p class="hint" id="stop-hint">We'll meet you there on delivery day and confirm the time.</p>
+          <p class="notice-box"><b>Must meet the driver in person.</b> We will not leave custom orders at the store for liability reasons. Please plan ahead and set your alarm. Thank you for understanding.</p>
         </div>
         <div data-show="pickup" hidden>
           <label for="pickup-day">Pickup day</label>
@@ -86,9 +87,9 @@
           <p class="hint">BUB Shed, 1160 Lewiston Road, Litchfield. Open 9 AM to 5 PM for pickup.</p>
         </div>
         <div data-show="ship" hidden>
-          <label for="ship-address">Shipping address (Maine only)</label>
-          <textarea id="ship-address" rows="3" placeholder="Street, town, ME, ZIP" autocomplete="street-address"></textarea>
-          <p class="hint" id="ship-hint">Mini packs only, shipped without a gift box (whole cheesecakes can't be shipped). Ships out Wednesday by UPS. Flat-rate shipping.</p>
+          <label for="ship-address">Shipping address (Maine only, no PO boxes)</label>
+          <textarea id="ship-address" rows="3" placeholder="Street address, town, ME, ZIP" autocomplete="street-address"></textarea>
+          <p class="hint" id="ship-hint">Mini packs only, shipped without a gift box (whole cheesecakes can't be shipped). No PO boxes. Ships out Wednesday by UPS. Flat-rate shipping.</p>
         </div>
 
         <h2 style="margin-top:1.6rem">3. Your info</h2>

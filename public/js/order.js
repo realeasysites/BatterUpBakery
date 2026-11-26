@@ -3,7 +3,7 @@
   const { money, esc, menu, stops, short } = window.BUB;
   const $ = (id) => document.getElementById(id);
   const builder = $('builder');
-  const state = { pack: 'whole', way: 'route', pay: 'card', cart: [], whole: { flavor: null, gf: false }, picks: {} };
+  const state = { pack: 'whole', way: 'route', pay: 'card', cart: [], whole: { flavor: null, gf: false, crust: 'graham' }, picks: {} };
   let M = null; // menu data
   let flavorsById = new Map();
 
@@ -16,7 +16,7 @@
   document.querySelectorAll('[data-pack]').forEach((b) => b.addEventListener('click', () => {
     state.pack = b.dataset.pack;
     state.picks = {};
-    state.whole = { flavor: null, gf: false };
+    state.whole = { flavor: null, gf: false, crust: 'graham' };
     document.querySelectorAll('[data-pack]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     renderBuilder();
   }));
@@ -37,6 +37,10 @@
           ${M.flavors.map((f) => `<button type="button" role="radio" aria-checked="${state.whole.flavor === f.id}" class="fp radio ${state.whole.flavor === f.id ? 'on' : ''}" data-f="${f.id}">${esc(f.name)}${f.gf ? ' <span class="tag">GF</span>' : ''}</button>`).join('')}
         </div>
         <label class="check"><input type="checkbox" id="gf" ${state.whole.gf ? 'checked' : ''} ${gfAllowed() ? '' : 'disabled'}> Gluten-friendly crust (+${money(M.gf_addon_cents)})</label>
+        <div class="crust-pick" id="crust-pick" ${state.whole.gf && gfAllowed() ? '' : 'hidden'} role="radiogroup" aria-label="Gluten-friendly crust">
+          <label class="check" style="margin:.2rem 1rem .2rem 0;display:inline-flex"><input type="radio" name="crust" value="graham" ${state.whole.crust !== 'oreo' ? 'checked' : ''}> Graham crust</label>
+          <label class="check" style="margin:.2rem 0;display:inline-flex"><input type="radio" name="crust" value="oreo" ${state.whole.crust === 'oreo' ? 'checked' : ''}> Oreo crust</label>
+        </div>
         <p class="hint" id="gf-hint">${gfHint()}</p>
         ${addRow(p)}`;
       builder.querySelectorAll('.fp').forEach((b) => b.addEventListener('click', () => {
@@ -46,7 +50,8 @@
         renderBuilder();
         builder.querySelector('.flavor-pick').scrollTop = scroll;
       }));
-      $('gf').addEventListener('change', (e) => { state.whole.gf = e.target.checked; updateAdd(); });
+      $('gf').addEventListener('change', (e) => { state.whole.gf = e.target.checked; $('crust-pick').hidden = !e.target.checked; updateAdd(); });
+      builder.querySelectorAll('[name=crust]').forEach((r) => r.addEventListener('change', () => { state.whole.crust = r.value; }));
     } else {
       builder.innerHTML = `
         <div class="progress"><span id="pick-count"></span><span class="bar"><i id="pick-bar"></i></span><span id="pick-flavors"></span></div>
@@ -81,8 +86,8 @@
   }
   function gfHint() {
     const f = flavorsById.get(state.whole.flavor);
-    if (!f) return 'Pick a flavor. Flavors marked GF can be made with a gluten-friendly crust.';
-    return f.gf ? `${esc(f.name)} can be made gluten friendly.` : `${esc(f.name)} isn't available gluten friendly.`;
+    if (!f) return 'Pick a flavor. Flavors marked GF can be made with a gluten-friendly graham or Oreo crust.';
+    return f.gf ? `${esc(f.name)} can be made gluten friendly, with a graham or Oreo crust.` : `${esc(f.name)} isn't available gluten friendly.`;
   }
 
   function miniCounts() {
@@ -126,8 +131,8 @@
     let item;
     if (state.pack === 'whole') {
       if (!state.whole.flavor) return;
-      item = { type: 'whole', qty, flavor_id: state.whole.flavor, gf: state.whole.gf && gfAllowed() };
-      state.whole = { flavor: null, gf: false };
+      item = { type: 'whole', qty, flavor_id: state.whole.flavor, gf: state.whole.gf && gfAllowed(), crust: state.whole.crust === 'oreo' ? 'oreo' : 'graham' };
+      state.whole = { flavor: null, gf: false, crust: 'graham' };
     } else {
       item = { type: state.pack, qty, picks: { ...state.picks } };
       state.picks = {};
@@ -143,7 +148,7 @@
   function describe(item) {
     if (item.type === 'whole') {
       const f = flavorsById.get(item.flavor_id);
-      return (f ? f.name : 'Flavor no longer available') + (item.gf ? ' · gluten friendly' : '');
+      return (f ? f.name : 'Flavor no longer available') + (item.gf ? ` · gluten friendly ${item.crust === 'oreo' ? 'Oreo' : 'graham'} crust` : '');
     }
     return Object.entries(item.picks).map(([id, n]) => `${(flavorsById.get(Number(id)) || { name: "?" }).name} (${n})`).join(', ');
   }
@@ -211,7 +216,7 @@
         : 'We\'ll meet you there on delivery day and confirm the time.';
     });
     $('pickup-day').innerHTML = c.pickup.map((d) => `<option value="${d.date}">${esc(d.label)}, 9 AM to 5 PM</option>`).join('');
-    $('ship-hint').textContent = `Mini packs only, shipped without a gift box (whole cheesecakes can't be shipped). Ships out ${c.ship.label} by UPS (24 to 48 hours in Maine). Flat ${money(M.ship_cents || 0)} shipping.`;
+    $('ship-hint').textContent = `Mini packs only, shipped without a gift box (whole cheesecakes can't be shipped). No PO boxes. Ships out ${c.ship.label} by UPS (24 to 48 hours in Maine). Flat ${money(M.ship_cents || 0)} shipping.`;
     const tue = new Date(c.route.Tuesday.date + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', month: 'short', day: 'numeric' });
     $('cycle-h').textContent = `Please order by ${c.cutoff.label.replace(' at ', ' @ ')}`;
     $('cycle-line').innerHTML = `to receive your cheesecake the week of <b>${esc(tue)}</b>. Choose how and what day below. We'll confirm your order by phone, text or email.`;

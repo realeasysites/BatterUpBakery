@@ -104,6 +104,7 @@ router.post('/orders', async (req, res) => {
       ship_address = clean(b.ship_address, 300);
       if (ship_address.length < 10) throw new OrderError('Please enter the full shipping address.');
       if (!/\b(ME|Maine)\b/i.test(ship_address)) throw new OrderError('We ship within the State of Maine. Please include ME in the address.');
+      if (/\bP\.?\s*O\.?\s*Box\b|\bpost\s*office\s*box\b|\bPOB\b/i.test(ship_address)) throw new OrderError("We can't ship to PO boxes. Please use a street address.");
       fulfill_date = cycle.ship.date;
       fulfillment_label = `UPS shipping (ships ${cycle.ship.label}) to ${ship_address}`;
       // Flat-rate shipping, set in the dashboard (Prices & settings).
