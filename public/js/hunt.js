@@ -99,7 +99,7 @@
         <span class="eyebrow">Launch giveaway${preview && !st.started ? ' · PREVIEW' : ''}</span>
         <h2>The Great Cheesecake Hunt</h2>
         <p><b>5 little cheesecakes are hidden around this website.</b> Find and tap all 5 to unlock your entry. ${esc(prize)}!</p>
-        <p>Entries close ${esc(fmt(st.end))} at midnight. One entry per phone number.</p>
+        <p>Entries close ${esc(fmt(st.end))} at 6 PM. One entry per phone number.</p>
         <div class="hunt-dots" aria-label="Cheesecakes found"></div></div></div></div>`;
       hero.insertAdjacentElement('afterend', sec);
       card = sec;
@@ -145,7 +145,7 @@
       const n = state.found.length;
       modal(`<div class="big">${ICON}</div><h2>The Great Cheesecake Hunt</h2>
         <p>You've found <b>${n} of 5</b>. Keep looking! They're tucked around the home page, the flavor board, Find a Slice, the order page and the very bottom of the site.</p>
-        <p class="muted">${esc(prize)}. Entries close ${esc(fmt(st.end))}.</p>
+        <p class="muted">${esc(prize)}. Entries close ${esc(fmt(st.end))} at 6 PM.</p>
         <div class="row2"><button class="btn" data-close>Keep hunting</button></div>`);
     }
 
@@ -173,7 +173,7 @@
           <div class="sr-only" aria-hidden="true"><input id="h-web" tabindex="-1" autocomplete="off"></div>
           <div class="err" id="h-err" hidden></div>
           <button class="btn" type="submit" style="width:100%;justify-content:center;margin-top:1rem">Enter the giveaway</button>
-          <p class="hint center">One entry per phone number. Winners drawn after ${esc(fmt(st.end))}.</p>
+          <p class="hint center">One entry per phone number. Winners drawn ${esc(fmt(st.end))} after 6 PM.</p>
         </form>`);
       m.querySelector('form').addEventListener('submit', async (e) => {
         e.preventDefault();

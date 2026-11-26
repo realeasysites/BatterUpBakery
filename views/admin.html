@@ -815,7 +815,7 @@
     const h = await api('/hunt');
     $('hunt-on').checked = h.on; $('hunt-start').value = h.start || ''; $('hunt-end').value = h.end || '';
     $('hunt-winners').value = h.winners; $('hunt-prize').value = h.prize || '';
-    $('hunt-status').textContent = !h.on ? 'Turned off: the hunt is hidden from the website.' : h.open ? `Live now. Entries close ${day(h.end)} at midnight.` : h.started ? 'Ended. Pick your winners below.' : `Starts ${day(h.start)}. Until then only the preview link shows it.`;
+    $('hunt-status').textContent = !h.on ? 'Turned off: the hunt is hidden from the website.' : h.open ? `Live now. Entries close ${day(h.end)} at 6 PM.` : h.started ? 'Ended. Pick your winners below.' : `Starts ${day(h.start)}. Until then only the preview link shows it.`;
     $('hunt-count').textContent = `${h.entries.length} entr${h.entries.length === 1 ? 'y' : 'ies'}`;
     if (!h.entries.length) { $('hunt-list').innerHTML = '<div class="empty-state"><h3>No entries yet</h3><p>People who find all 5 cheesecakes and enter will show up here.</p></div>'; return; }
     $('hunt-list').innerHTML = `<table class="cards"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Entered</th><th></th></tr></thead><tbody>${h.entries.map((e) => `<tr ${e.winner ? 'style="background:#e9f4d2"' : ''}>

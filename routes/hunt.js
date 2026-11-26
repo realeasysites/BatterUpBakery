@@ -12,7 +12,10 @@ function huntState() {
   const s = getSettings();
   const t = todayMaine();
   const started = t >= (s.hunt_start || '');
-  const open = s.hunt_on === '1' && started && t <= (s.hunt_end || '');
+  // Entries close at 6 PM Maine time on the end date, so winners can be drawn that night.
+  const hm = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+  const beforeClose = t < (s.hunt_end || '') || (t === s.hunt_end && hm < '18:00');
+  const open = s.hunt_on === '1' && started && beforeClose;
   return { on: s.hunt_on === '1', open, started, start: s.hunt_start, end: s.hunt_end, prize: s.hunt_prize, winners: Number(s.hunt_winners) || 1 };
 }
 
