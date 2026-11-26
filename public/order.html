@@ -87,8 +87,14 @@
           <p class="hint">BUB Shed, 1160 Lewiston Road, Litchfield. Open 9 AM to 5 PM for pickup.</p>
         </div>
         <div data-show="ship" hidden>
-          <label for="ship-address">Shipping address (Maine only, no PO boxes)</label>
-          <textarea id="ship-address" rows="3" placeholder="Street address, town, ME, ZIP" autocomplete="street-address"></textarea>
+          <p class="muted" style="margin:.2rem 0 0;font-weight:600">Shipping address (Maine only, no PO boxes)</p>
+          <label for="ship-street">Street address</label>
+          <input id="ship-street" placeholder="123 Main Street, Apt 2" autocomplete="street-address">
+          <label for="ship-town">Town</label><input id="ship-town" autocomplete="address-level2">
+          <div style="display:grid;grid-template-columns:90px 140px;gap:.8rem">
+            <div><label for="ship-state">State</label><input id="ship-state" value="ME" readonly aria-readonly="true"></div>
+            <div><label for="ship-zip">ZIP</label><input id="ship-zip" inputmode="numeric" maxlength="5" autocomplete="postal-code"></div>
+          </div>
           <p class="hint" id="ship-hint">Mini packs only, shipped without a gift box (whole cheesecakes can't be shipped). No PO boxes. Ships out Wednesday by UPS. Flat-rate shipping.</p>
         </div>
 

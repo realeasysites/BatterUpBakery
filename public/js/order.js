@@ -233,14 +233,18 @@
       fulfillment: state.way,
       stop_id: $('stop').value,
       pickup_date: $('pickup-day').value,
-      ship_address: $('ship-address').value,
+      ship_address: `${$('ship-street').value.trim()}, ${$('ship-town').value.trim()}, ME ${$('ship-zip').value.trim()}`,
       name: $('name').value, phone: $('phone').value, email: $('email').value, notes: $('notes').value,
       website: $('website').value,
       pay: M.card_payments ? state.pay : 'later'
     };
     if (state.way === 'route' && !body.stop_id) return showErr('Please choose a meet-up spot on our route.');
     if (state.way === 'ship' && state.cart.some((it) => it.type === 'whole')) return showErr("Whole cheesecakes can't be shipped. Choose pickup or a route meet-up, or remove the whole cheesecake to ship your mini packs.");
-    if (state.way === 'ship' && body.ship_address.trim().length < 10) return showErr('Please enter your full shipping address in Maine.');
+    if (state.way === 'ship') {
+      if ($('ship-street').value.trim().length < 4) return showErr('Please enter your street address.');
+      if (!$('ship-town').value.trim()) return showErr('Please enter your town.');
+      if (!/^0[34]\d{3}$/.test($('ship-zip').value.trim())) return showErr('Please enter a 5-digit Maine ZIP code.');
+    }
     if (!body.name.trim()) return showErr('Please enter your name.');
     if (body.phone.replace(/\D/g, '').length < 10) return showErr('Please enter a phone number we can reach you at.');
     const btn = $('place');
