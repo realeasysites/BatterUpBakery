@@ -34,7 +34,7 @@
       builder.innerHTML = `
         <label>Choose a flavor</label>
         <div class="flavor-pick" role="radiogroup" aria-label="Flavor">
-          ${M.flavors.map((f) => `<button type="button" role="radio" aria-checked="${state.whole.flavor === f.id}" class="fp radio ${state.whole.flavor === f.id ? 'on' : ''}" data-f="${f.id}">${esc(f.name)}${f.gf ? ' <span class="tag">GF</span>' : ''}</button>`).join('')}
+          ${M.flavors.map((f) => `<button type="button" role="radio" aria-checked="${state.whole.flavor === f.id}" class="fp radio ${state.whole.flavor === f.id ? 'on' : ''}" data-f="${f.id}">${esc(f.name)}${f.gf ? ' <span class="tag">GF</span>' : ''}${f.seasonal ? ' <span class="tag season">Seasonal</span>' : ''}</button>`).join('')}
         </div>
         <label class="check"><input type="checkbox" id="gf" ${state.whole.gf ? 'checked' : ''} ${gfAllowed() ? '' : 'disabled'}> Gluten-friendly crust (+${money(M.gf_addon_cents)})</label>
         <div class="crust-pick" id="crust-pick" ${state.whole.gf && gfAllowed() ? '' : 'hidden'} role="radiogroup" aria-label="Gluten-friendly crust">
