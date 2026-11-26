@@ -48,7 +48,11 @@ app.use(require('./routes/traffic'));
 app.use('/api', express.json({ limit: '50kb' }), require('./routes/public'));
 
 app.get('/healthz', (req, res) => res.send('ok'));
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'], maxAge: '1h' }));
+// Pages, CSS and JS are re-checked on every visit so updates show right away; images cache for an hour.
+app.use(express.static(path.join(__dirname, 'public'), {
+  extensions: ['html'], maxAge: '1h',
+  setHeaders: (res, file) => { if (/\.(html|css|js)$/.test(file)) res.setHeader('Cache-Control', 'no-cache'); }
+}));
 app.use((req, res) => res.status(404).sendFile(path.join(__dirname, 'public', '404.html')));
 
 // Safety net: a failed request should never take the whole site down.
