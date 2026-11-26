@@ -140,12 +140,14 @@ router.post('/api/admin/email/test', async (req, res) => {
 
 // Square: status and a $1 live test link (refund it in Square afterwards).
 router.get('/api/admin/square', (req, res) => {
-  res.json({ configured: square.configured(), live: square.enabled() });
+  res.json({ configured: square.configured(), live: square.enabled(), card_only: getSettings().card_only === '1' });
 });
 router.put('/api/admin/square', express.json(), (req, res) => {
   if (!square.configured()) return res.status(400).json({ error: 'Square is not connected yet.' });
-  setSetting('card_payments', req.body && req.body.on ? '1' : '0');
-  res.json({ configured: true, live: square.enabled() });
+  const b = req.body || {};
+  if (b.on !== undefined) setSetting('card_payments', b.on ? '1' : '0');
+  if (b.card_only !== undefined) setSetting('card_only', b.card_only ? '1' : '0');
+  res.json({ configured: true, live: square.enabled(), card_only: getSettings().card_only === '1' });
 });
 router.post('/api/admin/square/test', async (req, res) => {
   if (!square.configured()) return res.status(400).json({ error: 'Square codes are not set up yet.' });

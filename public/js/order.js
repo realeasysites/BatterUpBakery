@@ -186,10 +186,11 @@
   function updatePayUI() {
     if (!M) return;
     const box = $('pay-choice');
-    box.hidden = !M.card_payments;
+    if (M.card_only) state.pay = 'card';
+    box.hidden = !M.card_payments || !!M.card_only;
     $('pay-hint').textContent = state.pay === 'card' ? "You'll go to Square's secure checkout to pay, then come right back here." : 'Pay with cash or card when you get your order.';
     const placeBtn = $('place');
-    if (!placeBtn.dataset.busy) placeBtn.textContent = !box.hidden && state.pay === 'card' ? 'Continue to payment' : 'Place order';
+    if (!placeBtn.dataset.busy) placeBtn.textContent = M.card_payments && state.pay === 'card' ? 'Continue to payment' : 'Place order';
   }
   function shipCheck() {
     const bad = state.way === 'ship' && state.cart.some((it) => it.type === 'whole');

@@ -315,6 +315,7 @@
     <div class="card settings" id="sq-card">
       <h3>Card payments (Square)</h3>
       <label class="check" style="margin:.4rem 0"><input type="checkbox" id="sq-on"> <b>Let customers pay by card online</b></label>
+      <label class="check" style="margin:.2rem 0 .4rem 1.6rem"><input type="checkbox" id="sq-only"> Card payment required (no pay at pickup)</label>
       <p class="meta" id="sq-status">Checking…</p>
       <div class="bar" style="margin-top:.6rem">
         <button class="btn small" id="sq-test">Make a $1 test payment</button>
@@ -521,12 +522,17 @@
   async function loadSquare() {
     const q = await api('/square');
     $('sq-on').checked = q.live; $('sq-on').disabled = !q.configured;
-    $('sq-status').textContent = !q.configured ? 'Not connected yet.' : q.live ? 'ON: when ordering, customers can pay now by card or pay at pickup. Card payments go straight to your Square.' : 'OFF: everyone pays at pickup or delivery. Check the box above to turn card payments on.';
+    $('sq-only').checked = q.card_only; $('sq-only').disabled = !q.live;
+    $('sq-status').textContent = !q.configured ? 'Not connected yet.' : !q.live ? 'OFF: everyone pays at pickup or delivery. Check the box above to turn card payments on.' : q.card_only ? 'ON, card required: every customer pays by card through Square when they order. Payments go straight to your Square.' : 'ON: customers choose pay now by card or pay at pickup. Card payments go straight to your Square.';
     $('sq-test').disabled = !q.configured;
   }
   $('sq-on').addEventListener('change', async () => {
     await api('/square', { method: 'PUT', body: { on: $('sq-on').checked } });
     flash($('sq-on').checked ? 'Card payments on' : 'Card payments off'); loadSquare();
+  });
+  $('sq-only').addEventListener('change', async () => {
+    await api('/square', { method: 'PUT', body: { card_only: $('sq-only').checked } });
+    flash($('sq-only').checked ? 'Card payment required' : 'Pay at pickup allowed'); loadSquare();
   });
   $('sq-test').addEventListener('click', async () => {
     $('sq-msg').textContent = 'Opening Square checkout…';

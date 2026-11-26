@@ -42,6 +42,7 @@ router.get('/menu', (req, res) => {
     ...productsWithPrices(s),
     orders_open: s.orders_open !== '0',
     card_payments: square.enabled(),
+    card_only: square.cardOnly(),
     ship_cents: Number(s.price_ship) || 0,
     announcement: s.announcement || '',
     cycle: currentCycle()
@@ -117,7 +118,7 @@ router.post('/orders', async (req, res) => {
 
     const total_cents = priced.total_cents + shipTotal;
     // Card payment now (Square) or pay later. Shipping is a flat fee, so shipped orders can pay by card too.
-    const payCard = b.pay === 'card' && square.enabled();
+    const payCard = square.enabled() && (b.pay === 'card' || square.cardOnly());
     const code = newCode();
     const host = (req.get('host') || '').replace(/^www\./, '').split(':')[0];
     const source = b.visit && typeof b.visit === 'object' ? classifySource(b.visit, host) : 'Direct / typed in';
