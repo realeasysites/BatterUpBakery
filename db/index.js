@@ -112,6 +112,7 @@ for (const [col, type] of [['pay_method', 'TEXT'], ['check_no', 'TEXT'], ['paid_
 
 const DEFAULT_SETTINGS = {
   card_payments: '0',
+  tax_rate: '8',
   card_only: '0',
   price_ship: '1995',
   site_public: '0',

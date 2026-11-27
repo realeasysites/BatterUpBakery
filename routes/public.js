@@ -2,7 +2,7 @@
 const express = require('express');
 const { db, getSettings } = require('../db');
 const { currentCycle } = require('../lib/schedule');
-const { productsWithPrices, priceItems, OrderError, clean, newCode } = require('../lib/orders');
+const { productsWithPrices, priceItems, OrderError, clean, newCode, taxOn, taxRate } = require('../lib/orders');
 const { sendOrderEmails } = require('../lib/mailer');
 const square = require('../lib/square');
 const { classify: classifySource } = require('./traffic');
@@ -84,6 +84,8 @@ router.post('/orders', async (req, res) => {
     const priced = priceItems(b.items, flavorsById, s);
     const items = priced.items;
     let shipTotal = 0;
+    const tax_cents = taxOn(priced.total_cents, s);
+    if (tax_cents > 0) items.push({ type: 'tax', label: 'Sales tax', detail: `${taxRate(s)}%`, qty: 1, unit_cents: tax_cents, line_cents: tax_cents, counts: {} });
 
     const cycle = currentCycle();
     let fulfillment = b.fulfillment;
@@ -116,7 +118,7 @@ router.post('/orders', async (req, res) => {
       throw new OrderError('Please choose pickup, route meet-up or shipping.');
     }
 
-    const total_cents = priced.total_cents + shipTotal;
+    const total_cents = priced.total_cents + tax_cents + shipTotal;
     // Card payment now (Square) or pay later. Shipping is a flat fee, so shipped orders can pay by card too.
     const payCard = square.enabled() && (b.pay === 'card' || square.cardOnly());
     const code = newCode();

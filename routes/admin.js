@@ -177,6 +177,11 @@ router.put('/api/admin/settings', (req, res) => {
     setSetting(k, cents);
   }
   if (b.orders_open !== undefined) setSetting('orders_open', b.orders_open ? '1' : '0');
+  if (b.tax_rate !== undefined) {
+    const r = Number(b.tax_rate);
+    if (!Number.isFinite(r) || r < 0 || r >= 20) return res.status(400).json({ error: 'Check the sales tax percent' });
+    setSetting('tax_rate', String(r));
+  }
   if (b.site_public !== undefined) setSetting('site_public', b.site_public ? '1' : '0');
   if (b.announcement !== undefined) setSetting('announcement', clean(b.announcement, 200));
   res.json({ ok: true, settings: getSettings() });

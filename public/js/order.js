@@ -162,8 +162,11 @@
     $('cart-empty').hidden = state.cart.length > 0;
     const sub = state.cart.reduce((t, it) => t + unitPrice(it) * it.qty, 0);
     const ship = state.way === 'ship' && state.cart.length ? (M.ship_cents || 0) : 0;
+    const tax = Math.round(sub * (M.tax_rate || 0) / 100);
+    $('sub-line').hidden = !sub; $('sub-amt').textContent = money(sub);
+    $('tax-line').hidden = !sub; $('tax-amt').textContent = money(tax); $('tax-label').textContent = `Sales tax (${M.tax_rate || 0}%)`;
     $('ship-line').hidden = !ship; $('ship-amt').textContent = money(ship);
-    $('cart-total').textContent = money(sub + ship);
+    $('cart-total').textContent = money(sub + tax + ship);
     $('place').disabled = state.cart.length === 0 || !M.orders_open;
     if (typeof shipCheck === 'function' && state.way === 'ship') shipCheck();
   }

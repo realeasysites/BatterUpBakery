@@ -56,7 +56,7 @@
     // Prices
     document.querySelectorAll('[data-price]').forEach((el) => {
       const p = m.products[el.dataset.price];
-      if (p) el.textContent = money(p.price_cents);
+      if (p) el.innerHTML = money(p.price_cents) + (m.tax_rate ? ' <small style="font-size:.5em;font-weight:600">+ tax</small>' : '');
     });
     document.querySelectorAll('[data-ship-price]').forEach((el) => (el.textContent = money(m.ship_cents || 0)));
     document.querySelectorAll('[data-gf-price]').forEach((el) => (el.textContent = (m.gf_addon_cents / 100).toFixed(2)));

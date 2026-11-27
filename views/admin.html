@@ -284,13 +284,14 @@
   <section data-panel="settings" style="padding:0" hidden>
     <div class="grid2">
       <div class="card settings">
-        <h3>Prices (tax included)</h3>
+        <h3>Prices (before tax)</h3>
         <label for="p-whole">Whole cheesecake ($)</label><input id="p-whole" inputmode="decimal">
         <label for="p-gf">Gluten-friendly crust add-on ($)</label><input id="p-gf" inputmode="decimal">
         <label for="p-m6">Mini 6-pack ($)</label><input id="p-m6" inputmode="decimal">
         <label for="p-m105">Mini 10-pack, up to 5 flavors ($)</label><input id="p-m105" inputmode="decimal">
         <label for="p-m1010">Mini 10-pack, up to 10 flavors ($)</label><input id="p-m1010" inputmode="decimal">
         <label for="p-ship">Shipping, flat rate per order ($)</label><input id="p-ship" inputmode="decimal">
+        <label for="p-tax">Sales tax (%), added at checkout</label><input id="p-tax" inputmode="decimal">
       </div>
       <div class="card settings">
         <h3>Online ordering</h3>
@@ -569,13 +570,14 @@
     loadSquare(); loadEmail();
     const { settings } = await api('/overview');
     for (const [id, k] of Object.entries(priceFields)) $(id).value = (Number(settings[k]) / 100).toFixed(2);
+    $('p-tax').value = settings.tax_rate || '0';
     $('s-open').checked = settings.orders_open !== '0';
     $('s-public').checked = settings.site_public === '1'; pubText();
     $('s-ann').value = settings.announcement || '';
   }
   $('save-settings').addEventListener('click', async () => {
     $('set-err').hidden = true; $('set-ok').hidden = true;
-    const body = { orders_open: $('s-open').checked, announcement: $('s-ann').value };
+    const body = { orders_open: $('s-open').checked, announcement: $('s-ann').value, tax_rate: $('p-tax').value.replace(/[%\s]/g, '') };
     for (const [id, k] of Object.entries(priceFields)) body[k] = $(id).value.replace(/[$,\s]/g, '');
     try { await api('/settings', { method: 'PUT', body }); $('set-ok').hidden = false; }
     catch (e) { $('set-err').textContent = e.message; $('set-err').hidden = false; }

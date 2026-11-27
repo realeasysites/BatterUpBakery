@@ -124,9 +124,11 @@
       <h2 id="cart-h">Your order</h2>
       <ul class="cart-items" id="cart-items"></ul>
       <p class="empty" id="cart-empty">Nothing added yet. Pick a size and flavors to start.</p>
+      <div class="cart-total" id="sub-line" hidden style="font-size:1rem;border-top:0;padding-top:0"><span>Subtotal</span><span id="sub-amt"></span></div>
+      <div class="cart-total" id="tax-line" hidden style="font-size:1rem;border-top:0;padding-top:0"><span id="tax-label">Sales tax</span><span id="tax-amt"></span></div>
       <div class="cart-total" id="ship-line" hidden style="font-size:1rem;border-top:0;padding-top:0"><span>Shipping (flat, UPS in Maine)</span><span id="ship-amt"></span></div>
       <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
-      <p class="hint" style="margin-top:0">Tax included. We'll contact you to confirm the details.</p>
+      <p class="hint" style="margin-top:0">Prices are before tax. We'll contact you to confirm the details.</p>
       <div class="err" id="order-err" hidden></div>
       <button class="btn" id="place" style="width:100%;justify-content:center" disabled>Place order</button>
       <p class="hint center">Rather message us? <a href="https://m.me/100064381800560" target="_blank" rel="noopener">Order on Facebook Messenger</a></p>
